@@ -35,8 +35,10 @@ const TASK_ROLE_MAP = {
 // NORMALIZE ROLE
 // =========================
 function normalizeRole(role) {
-  return role?.toLowerCase().trim();
+  if (!role || typeof role !== "string") return "";
+  return role.toLowerCase().trim();
 }
+
 
 // =========================
 // ROLE RESOLVER
