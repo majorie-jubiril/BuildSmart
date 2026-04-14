@@ -524,7 +524,22 @@ function completeTask(stageId, taskId) {
   const hired = projectState.hiredContractors?.[requiredRole];
   
   if (!hired) {
-    showAlert("You must hire a contractor before completing this task.");
+    // check if contractors exist for this role
+    const available = contractorData.some(c =>
+      resolveRole(c.role) === requiredRole
+    );
+  
+    if (available) {
+      // ✅ contractor exists → NO ALERT
+      // just route user
+      goTo(`contractors.html?role=${requiredRole}`);
+    } else {
+      // ❌ no contractor exists → alert
+      showAlert("No contractor available for this task.", () => {
+        goTo("contractors.html");
+      });
+    }
+  
     return;
   }
 
