@@ -19,6 +19,13 @@ let currentTaskContext = {
 };
 
 // =========================
+// ROLE RESOLVER
+// =========================
+function resolveRole(role) {
+  return role?.toLowerCase().trim();
+}
+
+// =========================
 // UI STATE (STAGE TOGGLE)
 // =========================
 let expandedStages = {};
@@ -512,8 +519,12 @@ function completeTask(stageId, taskId) {
   // =========================
   // REQUIRE CONTRACTOR
   // =========================
-  if (!projectState.hiredContractor) {
-    alert("You must hire a contractor before completing this task.");
+  const requiredRole = resolveRole(task.requiredContractor);
+
+  const hired = projectState.hiredContractors?.[requiredRole];
+  
+  if (!hired) {
+    showAlert("You must hire a contractor before completing this task.");
     return;
   }
 
