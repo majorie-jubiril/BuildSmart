@@ -19,6 +19,26 @@ let currentTaskContext = {
 };
 
 // =========================
+// TASK ROLE
+// =========================
+const TASK_ROLE_MAP = {
+  "site-clearing": ["excavation"],
+  "site-layout": ["surveyor"],
+  "foundation": ["foundation specialist", "mason"],
+  "blockwork": ["mason"],
+  "roofing": ["carpenter"],
+  "plumbing": ["plumber"],
+  "electrical": ["electrician"]
+};
+
+// =========================
+// NORMALIZE ROLE
+// =========================
+function normalizeRole(role) {
+  return role?.toLowerCase().trim();
+}
+
+// =========================
 // ROLE RESOLVER
 // =========================
 function resolveRole(role) {
@@ -2420,7 +2440,7 @@ function initContractorList() {
   const nextTask = stage.tasks.find(t => t.status !== "completed");
   if (!nextTask) return;
 
-  const requiredRoles = TASK_ROLE_MAP[nextTask.id] || [];
+  const requiredRoles = TASK_ROLE_MAP[nextTask.id]?.map(normalizeRole) || [];
 
   let visibleCount = 0;
 
