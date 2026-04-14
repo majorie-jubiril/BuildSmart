@@ -35,10 +35,8 @@ const TASK_ROLE_MAP = {
 // NORMALIZE ROLE
 // =========================
 function normalizeRole(role) {
-  if (!role || typeof role !== "string") return "";
-  return role.toLowerCase().trim();
+  return String(role || "").toLowerCase().trim();
 }
-
 
 // =========================
 // ROLE RESOLVER
@@ -2452,7 +2450,11 @@ function initContractorList() {
   const contractorArray = [];
 
   cards.forEach(card => {
-    const role = normalizeRole(card.dataset.role || "");
+   const rawRole = card.dataset?.role;
+
+  const role = normalizeRole(
+    typeof rawRole === "string" ? rawRole : ""
+  );
 
     const result = evaluateContractor(role, requiredRoles);
 
