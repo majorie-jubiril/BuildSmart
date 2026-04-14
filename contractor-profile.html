@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contractor Profile</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="premium.css">
+  <link rel="icon" href="data:,">
+</head>
+
+<body>
+
+<header class="estimate-header">
+  <a href="contractors.html">← Back</a>
+  <h1>Contractor Profile</h1>
+</header>
+
+<main class="profile-page">
+
+  <!-- PROFILE HERO -->
+  <div class="profile-card">
+
+    <img id="contractorImage" src="" class="profile-avatar">
+
+    <h2 id="contractorName">
+      Contractor Name 
+      <span class="verified">✓ Verified</span>
+    </h2>
+
+    <p id="contractorRole" class="role">Role</p>
+
+    <p id="contractorRating" class="rating">⭐ 0 (0 reviews)</p>
+
+  </div>
+
+  <!-- STATS -->
+<div class="profile-stats">
+
+  <div class="stat">
+    <p>Projects</p>
+    <h3 id="contractorProjects">0</h3>
+  </div>
+
+  <div class="stat">
+    <p>Experience</p>
+    <h3 id="contractorExperience">0 yrs</h3>
+  </div>
+
+  <div class="stat">
+    <p>Location</p>
+    <h3 id="contractorLocation">Location</h3>
+  </div>
+</div>
+
+  <!-- ACTION BUTTONS -->
+<div class="action-card">
+  <div class="action-buttons">
+
+    <button class="action-btn call-btn">
+      📞 Call
+    </button>
+
+    <button class="action-btn message-btn">
+      💬 Message
+    </button>
+
+    <button id="hireContractorBtn" class="action-btn hire-btn">
+      Hire
+    </button>
+
+  </div>
+</div>
+
+<!-- TABS (SEPARATE BLOCK) -->
+
+  <!-- ABOUT -->
+  <div class="profile-section tab-content" id="about">
+
+    <h3>About</h3>
+
+    <p>
+      Experienced mason with over 12 years in residential and commercial construction. 
+      Specializing in foundation work, brickwork, and concrete structures. 
+      Committed to quality workmanship and timely project completion.
+    </p>
+
+  </div>
+
+  <!-- PROJECTS --><div class="project-item">
+  <h3>Projects</h3>
+    <div class="project-header">
+      <h4>3 Bedroom House Construction</h4>
+      <span class="status completed">Completed</span>
+    </div>
+
+    <p class="project-location">East Legon, Accra</p>
+
+    <p class="project-meta">
+      ₵450k budget • 6 months
+    </p>
+
+    <p class="project-description">
+      Delivered full residential construction from foundation to finishing.
+      Project completed ahead of schedule with high-quality workmanship.
+    </p>
+
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="profile-section tab-content" id="reviews" style="display:none;">
+
+    <h3>Reviews</h3>
+
+    <p>⭐ “Very reliable and professional.”</p>
+    <p>⭐ “Delivered ahead of schedule.”</p>
+    <p>⭐ “Excellent workmanship.”</p>
+
+  </div>
+
+  <!-- SKILLS -->
+  <div class="profile-section">
+
+    <h3>Skills & Expertise</h3>
+
+    <div class="skills">
+      <span>Foundation & Brickwork</span>
+      <span>Concrete Structures</span>
+      <span>Block Laying</span>
+      <span>Plastering</span>
+      <span>Waterproofing</span>
+      <span>Site Management</span>
+    </div>
+
+  </div>
+
+  <!-- CERTIFICATIONS -->
+  <div class="profile-section">
+
+    <h3>Certifications</h3>
+
+    <ul class="certs">
+      <li>✔ NVTI Level 3</li>
+      <li>✔ Construction Safety Certificate</li>
+    </ul>
+
+  </div>
+
+</main>
+
+<script src="script.js"></script>
+<script src="contractor-profile.js"></script>
+
+</body>
+</html>
