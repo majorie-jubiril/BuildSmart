@@ -2412,18 +2412,6 @@ function initContractorList() {
   // ===============================
   // 🎯 APPLY ROUTED FILTER
   // ===============================
-  const filterRole = localStorage.getItem("contractorFilter");
-
-  if (filterRole) {
-    console.log("Applying contractor filter:", filterRole);
-
-    localStorage.removeItem("contractorFilter");
-
-    setTimeout(() => {
-      filterContractorsByRole(filterRole);
-    }, 0);
-  }
-
   const cards = document.querySelectorAll(".contractor-card");
 
   if (!projectState || !projectState.stages) return;
