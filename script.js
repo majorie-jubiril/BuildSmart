@@ -2408,6 +2408,9 @@ function initContractorList() {
 
   console.log("👷 Contractor List Initialized");
 
+  // ===============================
+  // 🎯 APPLY ROUTED FILTER
+  // ===============================
   const cards = document.querySelectorAll(".contractor-card");
 
   if (!projectState || !projectState.stages) return;
@@ -3547,34 +3550,9 @@ function downloadProjectSummary() {
 // ===============================
 // 🎯 FILTER CONTRACTORS BY ROLE
 // ===============================
-function filterContractorsByRole(role) {
-  const cards = document.querySelectorAll(".contractor-card");
-
-  let matchCount = 0;
-
-  cards.forEach(card => {
-    const contractorRole = card.dataset.role;
-
-    if (!contractorRole) return;
-
-    const match =
-      contractorRole.toLowerCase().includes(role.toLowerCase());
-
-    if (match) matchCount++;
-
-    card.style.display = match ? "block" : "none";
-  });
-
-  // ===============================
-  // 🚨 FALLBACK (NO MATCH)
-  // ===============================
-  if (matchCount === 0) {
-    console.warn("No exact match found. Showing all contractors.");
-
-    cards.forEach(card => {
-      card.style.display = "block";
-    });
-  }
+function filterContractorsByRole() {
+  console.log("🚫 Filter disabled");
+  return;
 }
 
 function showToast(message) {
