@@ -46,6 +46,16 @@ function resolveRole(role) {
 }
 
 // =========================
+// ROLE COMPATIBILITY
+// =========================
+const ROLE_COMPATIBILITY = {
+  engineer: ["engineer", "structural engineer"],
+  mason: ["mason", "foundation specialist"],
+  surveyor: ["surveyor"],
+  "excavation specialist": ["excavation specialist"]
+};
+
+// =========================
 // UI STATE (STAGE TOGGLE)
 // =========================
 let expandedStages = {};
