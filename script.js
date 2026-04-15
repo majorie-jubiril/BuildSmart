@@ -42,7 +42,7 @@ function normalizeRole(role) {
 // ROLE RESOLVER
 // =========================
 function resolveRole(role) {
-  return role?.toLowerCase().trim();
+  return String(role || "").toLowerCase().trim();
 }
 
 // =========================
