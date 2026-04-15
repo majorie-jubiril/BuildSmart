@@ -140,7 +140,6 @@ function routeToContractors(requiredRole) {
     showAlert(
       `No ${roleKey} available right now. You can still browse or add one.`,
       () => {
-        localStorage.setItem("contractorFilter", roleKey);
         window.location.href = "contractors.html";
       }
     );
@@ -2598,7 +2597,9 @@ contractorArray.forEach(item => {
           return;
         }
 
-        const match = role.includes(filter);
+        const match =
+          role.includes(filter) ||
+          filter.includes(role);
 
         card.style.display = match ? "block" : "none";
       });
