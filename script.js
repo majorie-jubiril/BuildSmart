@@ -153,14 +153,6 @@ function routeToContractors(requiredRole) {
 }
 
 // ===============================
-// ROLE NORMALIZATION
-// ===============================
-function normalizeRole(role) {
-  if (!role) return "";
-  return role.toLowerCase().trim();
-}
-
-// ===============================
 // DYNAMIC TASK GENERATOR (CLEAN)
 // ===============================
 function generateStageTasks(stageId) {
