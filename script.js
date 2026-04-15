@@ -2594,12 +2594,9 @@ contractorArray.forEach(item => {
           return;
         }
 
-        const normalizedRole = role.toLowerCase();
-        const normalizedFilter = filter.toLowerCase();
-        
         const match =
-          normalizedRole.includes(normalizedFilter) ||
-          normalizedFilter.includes(normalizedRole);
+          role.includes(filter) ||
+          filter.includes(role);
 
         card.style.display = match ? "block" : "none";
       });
