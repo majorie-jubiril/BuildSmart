@@ -140,7 +140,6 @@ function routeToContractors(requiredRole) {
     showAlert(
       `No ${roleKey} available right now. You can still browse or add one.`,
       () => {
-        localStorage.setItem("contractorFilter", roleKey);
         window.location.href = "contractors.html";
       }
     );
