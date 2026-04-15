@@ -2600,17 +2600,17 @@ contractorArray.forEach(item => {
 
       // Filter cards
       cards.forEach(card => {
-        const role = card.dataset.role;
+        const role = String(card.dataset.role || "").toLowerCase();
+        const filter = String(selectedFilter || "").toLowerCase();
 
-        if (selectedFilter === "all") {
+        if (filter === "all") {
           card.style.display = "block";
-        } else {
-          const match =
-            role &&
-            role.toLowerCase().includes(selectedFilter.toLowerCase());
-
-          card.style.display = match ? "block" : "none";
+          return;
         }
+
+        const match = role.includes(filter);
+
+        card.style.display = match ? "block" : "none";
       });
     });
   });
