@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildSmart GH</title>
+
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="premium.css">
+<link rel="icon" href="data:,">
+</head>
+
+<body>
+
+<header class="main-header">
+  <h1>BuildSmart GH</h1>
+  <p>Your personal construction planning assistant</p>
+</header>
+
+<main class="dashboard-container">
+
+  <!-- HEADER -->
+  <section class="dashboard-header">
+    <p>Welcome back!</p>
+  </section>
+
+<!-- ========================= -->
+<!-- STAGE TRACKER -->
+<!-- ========================= -->
+<div id="stageTracker" class="stage-tracker"></div>
+
+  <!-- CURRENT PROJECT CARD -->
+  <div class="current-project-card">
+  <h3>Current Project</h3>
+
+  <p id="currentProjectName">My Project</p>
+
+  <!-- Progress -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <span>Progress</span>
+      <span id="progressPercent">0%</span>
+    </div>
+
+    <div class="progress-bar">
+      <div id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Info Boxes -->
+    <div class="project-info">
+    <div class="info-box">
+      <span class="label">Budget</span>
+      <span id="projectBudget">₵0</span>
+    </div>
+
+    <div class="info-box">
+        <span class="label">Stage</span>
+        <span id="stageText">Not started</span>
+      </div>
+    </div>
+
+  <!-- CTA -->
+    <button class="primary-btn full-width" onclick="goTo('estimate-result.html')">
+      View Details →
+    </button>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+<section class="quick-actions">
+  <h3>Quick Actions</h3>
+
+  <div class="actions-grid">
+
+    <!-- CREATE PROJECT (PRIMARY ENTRY) -->
+    <div class="action-card" onclick="goTo('create-project.html')">
+      <div class="action-icon blue">🏗️</div>
+      <h4>Create Project</h4>
+      <p>Start a new building project</p>
+    </div>
+
+    <!-- ESTIMATE (TOOL) -->
+    <div class="action-card" onclick="goTo('estimator.html')">
+      <div class="action-icon purple">📊</div>
+      <h4>Estimate</h4>
+      <p>Calculate building costs</p>
+    </div>
+
+    <!-- FIND CONTRACTORS -->
+    <div class="action-card" onclick="goTo('contractors.html')">
+      <div class="action-icon orange">👷</div>
+      <h4>Find Contractors</h4>
+      <p>Browse verified professionals</p>
+    </div>
+
+    <!-- DASHBOARD (TRACK PROGRESS) -->
+    <div class="action-card" onclick="goTo('estimate-result.html')">
+      <div class="action-icon green">📈</div>
+      <h4>Dashboard</h4>
+      <p>Track project progress</p>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<nav class="bottom-nav">
+
+  <a href="index.html" class="nav-item active">
+    <span>🏠</span>
+    <p>Home</p>
+  </a>
+
+  <a href="projects.html" class="nav-item">
+    <span>📁</span>
+    <p>Projects</p>
+  </a>
+
+  <a href="contractors.html" class="nav-item">
+    <span>👷</span>
+    <p>Contractors</p>
+  </a>
+
+  <a href="estimate-result.html" class="nav-item">
+    <span>📊</span>
+    <p>Progress</p>
+  </a>
+
+  <a href="saved.html" class="nav-item">
+    <span>❤️</span>
+    <p>Saved</p>
+  </a>
+
+</nav>
+
+<!-- ===== SCRIPT ===== -->
+<script src="script.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Contractors</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="premium.css">
+  <link rel="icon" href="data:,">
+</head>
+
+<body>
+
+<!-- ===== HERO SECTION ===== -->
+<header class="contractor-hero">
+  <div class="hero-content">
+    <h1>Find Contractors</h1>
+    <p>Verified professionals near you</p>
+
+    <input 
+      type="text" 
+      class="search-bar"
+      placeholder="Search by name, specialty, or location..." 
+    >
+  </div>
+
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="contractor-content">
+
+  <!-- ===== FILTER SECTION ===== -->
+  <div class="specialty-section">
+
+    <div class="filter-container" id="filterContainer"></div>
+
+  </div>
+
+  <!-- ===== CONTRACTOR LIST ===== -->
+  <div id="contractorList" class="contractor-list">
+    
+    <div id="emptyState" class="hidden">
+      No contractors available at the moment.
+    </div>
+
+    <!-- CONTRACTOR 1 -->
+    <div class="contractor-card"
+         data-name="Adu Frimpong"
+         data-role="Structural Engineer"
+         data-rating="4.8"
+         data-reviews="159"
+         data-location="Greater Accra"
+         data-image="images/contractor2.jpg"
+         data-experience="10 yrs"
+         data-projects="65"
+         data-about="Experienced structural engineer specializing in reinforced concrete structures, site supervision, and residential construction projects across Accra."
+         data-projectlist="3 Bedroom House – East Legon|Commercial Building – Spintex|Foundation Works – Tema"
+         data-skills="Structural Design|Site Supervision|Concrete Works|Project Management"
+         data-certs="GhIE Certified|Safety Certified">
+
+      <button class="save-btn">🤍</button>
+      <img src="images/contractor2.jpg" class="avatar">
+
+      <div class="info">
+      <h3>Adu Frimpong</h3>
+      <p class="role">Structural Engineer</p>
+
+      <div class="meta">
+      <span>⭐ 4.8 (159 reviews)</span>
+      <span>📍 Greater Accra</span>
+    </div>
+      <!-- 🧠 NEW: TRUST + FIT -->
+      <div class="contractor-insight">
+        <span class="trust-score">Reliability: --%</span>
+      </div>
+
+      <div class="actions">
+        <a href="tel:+233241234567">📞 Call</a>
+        <a href="https://wa.me/233241234567">💬 Message</a>
+        <a href="#" class="view-profile-btn">View Profile</a>
+      </div>
+
+      </div>
+      </div>
+
+    <!-- CONTRACTOR 2 -->
+    <div class="contractor-card"
+         data-name="Kofi Asante"
+         data-role="Electrical Engineer"
+         data-rating="4.6"
+         data-reviews="143"
+         data-location="Eastern"
+         data-image="images/default.jpg"
+         data-experience="8 yrs"
+         data-projects="48"
+         data-about="Certified electrical engineer with expertise in wiring, installations, and maintenance for residential and commercial buildings."
+         data-projectlist="Wiring – 4 Bedroom House|Solar Installation – Koforidua|Office Electrical Setup"
+         data-skills="Electrical Wiring|Solar Systems|Maintenance|Fault Diagnosis"
+         data-certs="ECG Certified|Electrical Safety License">
+      
+      <button class="save-btn">🤍</button>
+      <img src="images/default.jpg" class="avatar">
+
+      <div class="info">
+
+    <h3>Kofi Asante</h3>
+    <p class="role">Electrical Engineer</p>
+      
+    <div class="meta">
+      <p>⭐ 4.6 (143 reviews)</p>
+      <p>📍 Eastern</p>
+    </div>
+
+    <div class="contractor-insight">
+      <span class="trust-score">Reliability: --%</span>
+    </div>
+
+    <div class="actions">
+      <a href="tel:+233241234567">📞 Call</a>
+      <a href="https://wa.me/233241234567">💬 Message</a>
+      <a href="#" class="view-profile-btn">View Profile</a>
+    </div>
+
+  </div>
+    </div>
+
+    <!-- CONTRACTOR 3 -->
+    <div class="contractor-card"
+         data-name="Mensah Construction"
+         data-role="Foundation Specialist"
+         data-rating="4.8"
+         data-reviews="156"
+         data-location="Ashanti"
+         data-image="images/foundation3.jpg"
+         data-experience="12 yrs"
+         data-projects="87"
+         data-about="Specialists in foundation works, block laying, and structural base development with over a decade of experience in large-scale builds."
+         data-projectlist="Duplex Foundation – Kumasi|Estate Project – Obuasi|Drainage Construction"
+         data-skills="Foundation Works|Block Laying|Concrete|Site Prep"
+         data-certs="NVTI Level 3|Construction Safety Certified">
+
+      <button class="save-btn">🤍</button>  
+      <img src="images/foundation3.jpg" class="avatar">
+
+    <div class="info">
+    <h3>Mensah Construction</h3>
+    <p class="role">Foundation Specialist</p>
+
+  <div class="meta">
+    <p>⭐ 4.8 (156 reviews)</p>
+    <p>📍 Ashanti</p>
+  </div>
+
+  <div class="contractor-insight">
+    <span class="trust-score">Reliability: --%</span>
+  </div>
+
+  <div class="actions">
+    <a href="tel:+233241234567">📞 Call</a>
+    <a href="https://wa.me/233241234567">💬 Message</a>
+    <a href="#" class="view-profile-btn">View Profile</a>
+  </div>
+
+</div>
+    </div>
+
+    <!-- CONTRACTOR 4 -->
+    <div class="contractor-card"
+      data-name="Kwame Survey"
+      data-role="Surveyor"
+      data-rating="4.7"
+      data-reviews="120"
+      data-location="Accra"
+      data-image="images/surveyor.jpg"
+      data-experience="8 yrs"
+      data-projects="54"
+      data-about="Professional land surveyor specializing in site layout and measurement."
+      data-projectlist="Residential layouts|Commercial mapping"
+      data-skills="Land Surveying|Site Layout|Measurement"
+      data-certs="Licensed Surveyor">
+
+  <button class="save-btn">🤍</button>
+  <img src="images/surveyor.jpg" class="avatar">
+
+  <div class="info">
+
+  <h3>Kwame Survey</h3>
+  <p class="role">Surveyor</p>
+
+  <p>⭐ 4.7 (120 reviews)</p>
+  <p>📍 Accra</p>
+
+  <div class="contractor-insight">
+    <span class="trust-score">Reliability: --%</span>
+  </div>
+
+  <div class="actions">
+    <a href="tel:+233241234567">📞 Call</a>
+    <a href="https://wa.me/233241234567">💬 Message</a>
+    <a href="#" class="view-profile-btn">View Profile</a>
+  </div>
+
+</div>
+</div>
+
+  <!-- MASON -->
+<div class="contractor-card"
+  data-name="Yaw Mensah"
+  data-role="Mason"
+  data-rating="4.5"
+  data-reviews="109"
+  data-location="Oforikrom"
+  data-image="images/mason2.jpg"
+  data-experience="12 yrs"
+  data-projects="40"
+  data-about="Experienced mason specializing in blockwork and plastering."
+  data-projectlist="Residential Homes|Renovations"
+  data-skills="Blockwork|Plastering|Concrete Works"
+  data-certs="Certified Mason">
+
+  <button class="save-btn">🤍</button>
+  <img src="images/mason2.jpg" class="avatar">
+
+  <div class="info">
+    <h3>Yaw Mensah</h3>
+    <p class="role">Mason</p>
+
+    <p>⭐ 4.5 (109 reviews)</p>
+    <p>📍 Oforikrom</p>
+
+    <div class="contractor-insight">
+      <span class="trust-score">Reliability: --%</span>
+    </div>
+
+    <div class="actions">
+      <a href="#">📞 Call</a>
+      <a href="#">💬 Message</a>
+      <a href="#" class="view-profile-btn">View Profile</a>
+    </div>
+  </div>
+</div>
+
+<!-- EXCAVATION SPECIALIST -->
+<div class="contractor-card"
+  data-name="Obed Borketey"
+  data-role="Excavation Specialist"
+  data-rating="4.6"
+  data-reviews="111"
+  data-location="Nungua"
+  data-image="images/Excavation.jpg"
+  data-experience="8 yrs"
+  data-projects="30"
+  data-about="Specialist in site clearing and excavation works."
+  data-projectlist="Foundation Projects|Land Prep"
+  data-skills="Excavation|Site Clearing"
+  data-certs="Excavation Certified">
+
+  <button class="save-btn">🤍</button>
+  <img src="images/Excavation.jpg" class="avatar">
+
+  <div class="info">
+    <h3>Obed Borketey</h3>
+    <p class="role">Excavation Specialist</p>
+
+    <p>⭐ 4.6 (111 reviews)</p>
+    <p>📍 Nungua</p>
+
+    <div class="contractor-insight">
+      <span class="trust-score">Reliability: --%</span>
+    </div>
+
+    <div class="actions">
+      <a href="#">📞 Call</a>
+      <a href="#">💬 Message</a>
+      <a href="#" class="view-profile-btn">View Profile</a>
+    </div>
+  </div>
+</div>
+
+<!-- PLUMBER -->
+<div class="contractor-card"
+  data-name="Samuel Kissi"
+  data-role="Plumber"
+  data-rating="4.9"
+  data-reviews="188"
+  data-location="Haatso"
+  data-image="images/plumbing2.jpg"
+  data-experience="10 yrs"
+  data-projects="50">
+
+  <button class="save-btn">🤍</button>
+  <img src="images/plumbing2.jpg" class="avatar">
+
+  <div class="info">
+    <h3>Samuel Kissi</h3>
+    <p class="role">Plumber</p>
+
+    <p>⭐ 4.9 (188 reviews)</p>
+    <p>📍 Haatso</p>
+
+    <div class="contractor-insight">
+      <span class="trust-score">Reliability: --%</span>
+    </div>
+
+    <div class="actions">
+      <a href="#">📞 Call</a>
+      <a href="#">💬 Message</a>
+      <a href="#" class="view-profile-btn">View Profile</a>
+    </div>
+  </div>
+</div>
+
+<!-- CARPENTER -->
+<div class="contractor-card"
+  data-name="Kofi Ampong"
+  data-role="Carpenter"
+  data-rating="4.2"
+  data-reviews="82"
+  data-location="Cape Coast"
+  data-image="images/carpenter.jpg"
+  data-experience="9 yrs"
+  data-projects="35">
+
+  <button class="save-btn">🤍</button>
+  <img src="images/carpenter.jpg" class="avatar">
+
+  <div class="info">
+    <h3>Kofi Ampong</h3>
+    <p class="role">Carpenter</p>
+
+    <p>⭐ 4.2 (82 reviews)</p>
+    <p>📍 Cape Coast</p>
+
+    <div class="contractor-insight">
+      <span class="trust-score">Reliability: --%</span>
+    </div>
+
+    <div class="actions">
+      <a href="#">📞 Call</a>
+      <a href="#">💬 Message</a>
+      <a href="#" class="view-profile-btn">View Profile</a>
+    </div>
+  </div>
+</div>
+
+<!-- PAINTER -->
+<div class="contractor-card"
+  data-name="Odartey Lamptey"
+  data-role="Painter"
+  data-rating="4.4"
+  data-reviews="86"
+  data-location="Labadi"
+  data-image="images/painter3.jpg"
+  data-experience="4 yrs"
+  data-projects="35">
+
+  <button class="save-btn">🤍</button>
+  <img src="images/painter3.jpg" class="avatar">
+
+  <div class="info">
+    <h3>Odartey Lamptey</h3>
+    <p class="role">Painter</p>
+
+    <p>⭐ 4.2 (84 reviews)</p>
+    <p>📍 Labadi</p>
+
+    <div class="contractor-insight">
+      <span class="trust-score">Reliability: --%</span>
+    </div>
+
+    <div class="actions">
+      <a href="#">📞 Call</a>
+      <a href="#">💬 Message</a>
+      <a href="#" class="view-profile-btn">View Profile</a>
+    </div>
+  </div>
+</div>
+
+<!-- Tiler -->
+<div class="contractor-card"
+  data-name="Kwadjo Forson"
+  data-role="Tiler"
+  data-rating="4.7"
+  data-reviews="88"
+  data-location="Ashiyie"
+  data-image="images/tiler2.jpg"
+  data-experience="9 yrs"
+  data-projects="35">
+
+  <button class="save-btn">🤍</button>
+  <img src="images/tiler2.jpg" class="avatar">
+
+  <div class="info">
+    <h3>Kwadjo Forson</h3>
+    <p class="role">Carpenter</p>
+
+    <p>⭐ 4.7 (88 reviews)</p>
+    <p>📍 Ashiyie</p>
+
+    <div class="contractor-insight">
+      <span class="trust-score">Reliability: --%</span>
+    </div>
+
+    <div class="actions">
+      <a href="#">📞 Call</a>
+      <a href="#">💬 Message</a>
+      <a href="#" class="view-profile-btn">View Profile</a>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <a href="index.html">Home</a>
+  <a href="estimator.html">Estimate</a>
+  <a href="contractors.html" class="active">Contractors</a>
+  <a href="account.html">Account</a>
+</nav>
+
+<!-- ===== SCRIPT ===== -->
+<script src="script.js"></script>
+<script src="contractor-profile.js"></script>
+</body>
+</html>

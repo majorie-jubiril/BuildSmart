@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Details</title>
+
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:,">
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="details-header">
+  <button onclick="goTo('index.html')" class="back-btn">← Back</button>
+  <h2 id="detailsProjectName">Project Name</h2>
+  <p id="detailsLocation">Location</p>
+</header>
+
+<main class="details-container">
+
+  <!-- OVERALL PROGRESS -->
+  <section class="details-card">
+    <h3>Overall Progress</h3>
+
+    <div class="progress-row">
+      <span>Project Completion</span>
+      <span id="overallProgressPercent">0%</span>
+    </div>
+
+    <div class="progress-bar">
+      <div id="overallProgressFill"></div>
+    </div>
+
+    <div class="budget-row">
+      <div>
+        <p>Total Budget</p>
+        <h4 id="totalBudget">₵0</h4>
+      </div>
+
+      <div>
+        <p>Spent</p>
+        <h4 id="totalSpent">₵0</h4>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div id="budgetProgressFill"></div>
+    </div>
+  </section>
+
+  <!-- STAGES -->
+  <section id="stagesContainer"></section>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a href="index.html">Home</a>
+  <a href="estimator.html">Estimate</a>
+  <a href="contractors.html">Contractors</a>
+  <a href="account.html">Account</a>
+</nav>
+
+<script src="script.js"></script>
+
+</body>
+</html>

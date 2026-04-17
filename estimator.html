@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cost Estimator</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="premium.css">
+  <link rel="icon" href="data:,">
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="estimate-header">
+  <a href="index.html">← Back</a>
+  <h1>Cost Estimator</h1>
+  <p>Enter your house details</p>
+</header>
+
+<main class="estimator">
+
+  <!-- HERO -->
+  <section class="estimator-hero">
+    <h1>Plan Your Building Project</h1>
+    <p>Get an instant cost estimate and material breakdown</p>
+  </section>
+
+  <!-- ===== MAIN LAYOUT ===== -->
+  <div class="estimator-layout">
+
+    <!-- ================= LEFT SIDE (FORM) ================= -->
+    <div class="estimator-form">
+
+      <!-- STEP 1 -->
+      <section class="estimator-card">
+        <h2>Step 1 — Building Structure</h2>
+
+        <!-- Bedrooms -->
+        <div class="input-group">
+          <label>Number of Bedrooms</label>
+          <div class="option-grid" id="bedroomOptions">
+            <button type="button" data-value="1">1 Bedroom</button>
+            <button type="button" data-value="2">2 Bedrooms</button>
+            <button type="button" data-value="3">3 Bedrooms</button>
+            <button type="button" data-value="4">4 Bedrooms</button>
+            <button type="button" data-value="5">5 Bedrooms</button>
+          </div>
+        </div>
+
+        <!-- Floors -->
+          <div class="card-inner">
+        <div class="input-group">
+          <label>Number of Floors</label>
+          <div class="option-grid" id="floorOptions">
+            <button type="button" data-value="1">1 Floor</button>
+            <button type="button" data-value="2">2 Floors</button>
+            <button type="button" data-value="3">3 Floors</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 2 + 3 (ROW) -->
+      <div class="estimator-row">
+
+        <!-- STEP 2 -->
+        <section class="estimator-card">
+          <h2>Step 2 — Building Size</h2>
+
+          <div class="input-group">
+            <label for="houseSize">House Size (sqm)</label>
+            <input type="number" id="houseSize" placeholder="e.g. 120" />
+            <small>Tip: A standard 3-bedroom house is ~120–150 sqm</small>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="estimator-card">
+          <h2>Step 3 — Location</h2>
+
+          <div class="input-group">
+            <label for="location">Project Location</label>
+            <input type="text" id="location" placeholder="e.g. Accra, Kumasi" />
+            <small>Location affects labor and material costs</small>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- STEP 4 -->
+      <section class="estimator-card">
+        <h2>Step 4 — Upload Building Plan (Optional)</h2>
+
+        <div class="input-group">
+          <label for="projectPlan">Upload Plan (PDF, JPG, PNG)</label>
+
+          <input 
+            type="file" 
+            id="projectPlan" 
+            accept=".pdf,image/*"
+          >
+
+          <small>You can upload architectural drawings or sketches</small>
+
+          <p id="planFileName" class="form-subtext"></p>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ================= RIGHT SIDE (LIVE PANEL) ================= -->
+    <div class="estimate-panel">
+
+      <h3>Estimated Cost</h3>
+      <p id="liveEstimate">₵ —</p>
+
+      <button type="button" id="calculateBtn">
+        Calculate Estimate →
+      </button>
+
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <a href="index.html">Home</a>
+  <a href="estimator.html" class="active">Estimate</a>
+  <a href="contractors.html">Contractors</a>
+  <a href="account.html">Account</a>
+</nav>
+
+<!-- ===== SCRIPT (IMPORTANT: keep at bottom) ===== -->
+<script src="script.js"></script>
+
+</body>
+</html>

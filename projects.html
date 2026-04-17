@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Projects</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="premium.css"/>
+</head>
+<body>
+
+  <div class="container">
+    <div class="projects-header">
+      <div class="projects-header-left">
+        <h2>My Projects</h2>
+        <p>Track and manage your building projects</p>
+      </div>
+
+      <!-- CREATE PROJECT -->
+      <button class="new-project-btn" onclick="goTo('create-project.html')">
+        + New Project
+      </button>
+    </div>
+
+    <!-- PROJECT LIST -->
+    <div id="projectList" class="project-grid"></div>
+  </div>
+
+    <!-- ===== BOTTOM NAV ===== -->
+    <nav class="bottom-nav">
+    <a href="index.html">Home</a>
+    <a href="projects.html" class="active">Projects</a>
+    <a href="estimator.html">Estimate</a>
+    <a href="contractors.html">Contractors</a>
+    <a href="account.html">Account</a>
+    </nav>
+
+  <script src="script.js"></script>
+</body>
+</html>
