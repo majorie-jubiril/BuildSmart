@@ -2,30 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My Projects</title>
+  <title>Projects — BuildSmart GH</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="premium.css"/>
+<link rel="stylesheet" href="construction.css">
+<link rel="stylesheet" href="premium.css">
 </head>
-<body>
+<body class="projects-page">
 
-  <div class="container">
+  <main class="container projects-main">
     <div class="projects-header">
       <div class="projects-header-left">
-        <h2>My Projects</h2>
+        <h1>My Projects</h1>
         <p>Track and manage your building projects</p>
       </div>
 
       <!-- CREATE PROJECT -->
-      <button class="new-project-btn" onclick="goTo('create-project.html')">
-        + New Project
-      </button>
+      <a class="new-project-btn" href="create-project.html"><span aria-hidden="true">+</span> New Project</a>
     </div>
 
     <!-- PROJECT LIST -->
-    <div id="projectList" class="project-grid"></div>
-  </div>
+    <p id="projectsSummary" class="projects-summary" aria-live="polite"></p>
+    <div id="projectList" class="project-grid" aria-label="Your projects"></div>
+  </main>
 
     <!-- ===== BOTTOM NAV ===== -->
     <nav class="bottom-nav">
@@ -36,6 +36,12 @@
     <a href="account.html">Account</a>
     </nav>
 
-  <script src="script.js"></script>
+  <script src="finance.js"></script>
+<script src="construction.js"></script>
+<script src="evidence.js"></script>
+<script src="projects-media.js"></script>
+<script src="script.js"></script>
+<script src="construction-ui.js"></script><script src="project-experience.js"></script>
+<script src="ui.js" defer></script>
 </body>
 </html>

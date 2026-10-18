@@ -5,17 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Find Contractors</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="premium.css">
   <link rel="icon" href="data:,">
+<link rel="stylesheet" href="premium.css">
+<link rel="stylesheet" href="contractor-support.css">
 </head>
 
-<body>
+<body class="directory-page">
 
 <!-- ===== HERO SECTION ===== -->
 <header class="contractor-hero">
   <div class="hero-content">
     <h1>Find Contractors</h1>
-    <p>Verified professionals near you</p>
+    <p>Explore listed construction specialties. Engagement is optional.</p>
 
     <input 
       type="text" 
@@ -44,7 +45,7 @@
     </div>
 
     <!-- CONTRACTOR 1 -->
-    <div class="contractor-card"
+    <div class="contractor-card" data-profile-source="legacy"
          data-name="Adu Frimpong"
          data-role="Structural Engineer"
          data-rating="4.8"
@@ -70,13 +71,11 @@
       <span>📍 Greater Accra</span>
     </div>
       <!-- 🧠 NEW: TRUST + FIT -->
-      <div class="contractor-insight">
-        <span class="trust-score">Reliability: --%</span>
-      </div>
+      
 
       <div class="actions">
-        <a href="tel:+233241234567">📞 Call</a>
-        <a href="https://wa.me/233241234567">💬 Message</a>
+        <button type="button" disabled title="No confirmed contact details recorded">Contact unavailable</button>
+        <button type="button" disabled title="No confirmed contact details recorded">Contact unavailable</button>
         <a href="#" class="view-profile-btn">View Profile</a>
       </div>
 
@@ -84,7 +83,7 @@
       </div>
 
     <!-- CONTRACTOR 2 -->
-    <div class="contractor-card"
+    <div class="contractor-card" data-profile-source="legacy"
          data-name="Kofi Asante"
          data-role="Electrical Engineer"
          data-rating="4.6"
@@ -111,13 +110,11 @@
       <p>📍 Eastern</p>
     </div>
 
-    <div class="contractor-insight">
-      <span class="trust-score">Reliability: --%</span>
-    </div>
+    
 
     <div class="actions">
-      <a href="tel:+233241234567">📞 Call</a>
-      <a href="https://wa.me/233241234567">💬 Message</a>
+      <button type="button" disabled title="No confirmed contact details recorded">Contact unavailable</button>
+      <button type="button" disabled title="No confirmed contact details recorded">Contact unavailable</button>
       <a href="#" class="view-profile-btn">View Profile</a>
     </div>
 
@@ -125,7 +122,7 @@
     </div>
 
     <!-- CONTRACTOR 3 -->
-    <div class="contractor-card"
+    <div class="contractor-card" data-profile-source="legacy"
          data-name="Mensah Construction"
          data-role="Foundation Specialist"
          data-rating="4.8"
@@ -151,13 +148,11 @@
     <p>📍 Ashanti</p>
   </div>
 
-  <div class="contractor-insight">
-    <span class="trust-score">Reliability: --%</span>
-  </div>
+  
 
   <div class="actions">
-    <a href="tel:+233241234567">📞 Call</a>
-    <a href="https://wa.me/233241234567">💬 Message</a>
+    <button type="button" disabled title="No confirmed contact details recorded">Contact unavailable</button>
+    <button type="button" disabled title="No confirmed contact details recorded">Contact unavailable</button>
     <a href="#" class="view-profile-btn">View Profile</a>
   </div>
 
@@ -165,7 +160,7 @@
     </div>
 
     <!-- CONTRACTOR 4 -->
-    <div class="contractor-card"
+    <div class="contractor-card" data-profile-source="legacy"
       data-name="Kwame Survey"
       data-role="Surveyor"
       data-rating="4.7"
@@ -190,13 +185,11 @@
   <p>⭐ 4.7 (120 reviews)</p>
   <p>📍 Accra</p>
 
-  <div class="contractor-insight">
-    <span class="trust-score">Reliability: --%</span>
-  </div>
+  
 
   <div class="actions">
-    <a href="tel:+233241234567">📞 Call</a>
-    <a href="https://wa.me/233241234567">💬 Message</a>
+    <button type="button" disabled title="No confirmed contact details recorded">Contact unavailable</button>
+    <button type="button" disabled title="No confirmed contact details recorded">Contact unavailable</button>
     <a href="#" class="view-profile-btn">View Profile</a>
   </div>
 
@@ -204,7 +197,7 @@
 </div>
 
   <!-- MASON -->
-<div class="contractor-card"
+<div class="contractor-card" data-profile-source="legacy"
   data-name="Yaw Mensah"
   data-role="Mason"
   data-rating="4.5"
@@ -228,9 +221,7 @@
     <p>⭐ 4.5 (109 reviews)</p>
     <p>📍 Oforikrom</p>
 
-    <div class="contractor-insight">
-      <span class="trust-score">Reliability: --%</span>
-    </div>
+    
 
     <div class="actions">
       <a href="#">📞 Call</a>
@@ -241,7 +232,7 @@
 </div>
 
 <!-- EXCAVATION SPECIALIST -->
-<div class="contractor-card"
+<div class="contractor-card" data-profile-source="legacy"
   data-name="Obed Borketey"
   data-role="Excavation Specialist"
   data-rating="4.6"
@@ -265,9 +256,7 @@
     <p>⭐ 4.6 (111 reviews)</p>
     <p>📍 Nungua</p>
 
-    <div class="contractor-insight">
-      <span class="trust-score">Reliability: --%</span>
-    </div>
+    
 
     <div class="actions">
       <a href="#">📞 Call</a>
@@ -278,7 +267,7 @@
 </div>
 
 <!-- PLUMBER -->
-<div class="contractor-card"
+<div class="contractor-card" data-profile-source="legacy"
   data-name="Samuel Kissi"
   data-role="Plumber"
   data-rating="4.9"
@@ -298,9 +287,7 @@
     <p>⭐ 4.9 (188 reviews)</p>
     <p>📍 Haatso</p>
 
-    <div class="contractor-insight">
-      <span class="trust-score">Reliability: --%</span>
-    </div>
+    
 
     <div class="actions">
       <a href="#">📞 Call</a>
@@ -311,7 +298,7 @@
 </div>
 
 <!-- CARPENTER -->
-<div class="contractor-card"
+<div class="contractor-card" data-profile-source="legacy"
   data-name="Kofi Ampong"
   data-role="Carpenter"
   data-rating="4.2"
@@ -331,9 +318,7 @@
     <p>⭐ 4.2 (82 reviews)</p>
     <p>📍 Cape Coast</p>
 
-    <div class="contractor-insight">
-      <span class="trust-score">Reliability: --%</span>
-    </div>
+    
 
     <div class="actions">
       <a href="#">📞 Call</a>
@@ -344,7 +329,7 @@
 </div>
 
 <!-- PAINTER -->
-<div class="contractor-card"
+<div class="contractor-card" data-profile-source="legacy"
   data-name="Odartey Lamptey"
   data-role="Painter"
   data-rating="4.4"
@@ -364,9 +349,7 @@
     <p>⭐ 4.2 (84 reviews)</p>
     <p>📍 Labadi</p>
 
-    <div class="contractor-insight">
-      <span class="trust-score">Reliability: --%</span>
-    </div>
+    
 
     <div class="actions">
       <a href="#">📞 Call</a>
@@ -377,7 +360,7 @@
 </div>
 
 <!-- Tiler -->
-<div class="contractor-card"
+<div class="contractor-card" data-profile-source="legacy"
   data-name="Kwadjo Forson"
   data-role="Tiler"
   data-rating="4.7"
@@ -397,9 +380,7 @@
     <p>⭐ 4.7 (88 reviews)</p>
     <p>📍 Ashiyie</p>
 
-    <div class="contractor-insight">
-      <span class="trust-score">Reliability: --%</span>
-    </div>
+    
 
     <div class="actions">
       <a href="#">📞 Call</a>
@@ -419,7 +400,12 @@
 </nav>
 
 <!-- ===== SCRIPT ===== -->
-<script src="script.js"></script>
-<script src="contractor-profile.js"></script>
+<script src="finance.js"></script>
+<script src="construction.js"></script>
+<script src="evidence.js"></script>
+<script src="contractor-model.js"></script><script src="contractor-support.js"></script><script src="script.js"></script>
+<script src="construction-ui.js"></script><script src="project-experience.js"></script>
+
+<script src="ui.js" defer></script>
 </body>
 </html>

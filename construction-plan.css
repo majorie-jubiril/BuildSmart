@@ -1,0 +1,196 @@
+/* Scoped workspace composition, using the existing premium shell and palette. */
+.construction-plan-page { --plan-navy:#142f50;--plan-border:#dfe9f5;--plan-muted:#526b8c; }
+.construction-plan-page .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
+.construction-plan-page .plan-workspace { display:block;max-width:1600px!important;width:100%;margin:0 auto;padding:0; }
+.construction-plan-page :is(button,a):focus-visible { outline:3px solid #4084f7;outline-offset:3px; }
+.construction-plan-page button { font-family:inherit;cursor:pointer; }
+.construction-plan-page .plan-summary { display:grid;grid-template-columns:145px minmax(180px,1.35fr) minmax(180px,.9fr) minmax(235px,1fr);align-items:center;gap:20px;padding:18px;background:#142f50;color:#fff;border-radius:13px;min-height:170px;box-shadow:0 4px 14px #15385d08; }
+.plan-cover { position:relative;min-width:0;height:128px;background:#1c426e;border-radius:9px;overflow:hidden; }
+.plan-cover img { width:100%;height:100%;object-fit:cover;object-position:right center;display:block; }
+.plan-cover.has-photo img { object-fit:contain;object-position:center; }
+.plan-cover small { position:absolute;bottom:0;left:0;right:0;padding:3px 5px;background:#10294edb;font-size:8px;text-align:center;color:#fff; }
+.construction-plan-page .plan-identity h2 { font-size:21px;line-height:1.3;letter-spacing:-.35px;color:white;margin:0 0 9px;overflow-wrap:anywhere; }
+.construction-plan-page .plan-identity p { margin:5px 0;font-size:11px;line-height:1.6;color:#edf4ff; }
+.plan-status-line { display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:10px; }
+.plan-badge { background:#b3f2db;color:#0d5542;border-radius:7px;padding:5px 9px;font-weight:600; }
+#planActivity { padding:5px 9px;background:#35567a;border-radius:20px; }
+.plan-finances { border-inline:1px solid #55708c;padding:0 20px;display:flex;flex-direction:column;gap:4px;min-width:0; }
+.plan-finances>span { font-size:11px; }
+.plan-finances>strong { font-size:20px;line-height:1.3;white-space:nowrap;font-variant-numeric:tabular-nums; }
+.construction-plan-page .plan-finances :is(#estimateValue,#projectSpent) { font-size:20px;font-weight:700; }
+.plan-finances #projectSpent { color:#6ee7c3;margin-bottom:2px; }
+.plan-finances small { font-size:10px;line-height:1.5; }
+.construction-plan-page .plan-finances small { color:#d4e3f6; }
+.plan-finances .finance-notice { color:#fff4d4;background:#294461;font-size:10px;padding:8px; }
+.plan-completion { display:flex;align-items:center;gap:18px;min-width:0; }
+.plan-ring { width:100px;height:100px;border-radius:50%;background:conic-gradient(#1464ff var(--completion,0%),#36516f 0);padding:12px;flex-shrink:0; }
+.plan-ring>div { height:100%;border-radius:50%;background:#142f50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px; }
+.plan-ring strong { font-size:23px; }.plan-ring span { font-size:10px; }
+#planCounts { list-style:none;padding:0;margin:0 0 14px;font-size:10px;display:grid;gap:10px;white-space:nowrap; }
+#planCounts li::before { content:'';display:inline-block;width:12px;height:12px;border-radius:50%;background:#d9e4ef;margin-right:9px;vertical-align:-2px; }
+#planCounts .completed::before { background:#14bc85; }#planCounts .active::before { background:#4c92fc; }
+#planTaskCount { font-size:9px;white-space:nowrap; }
+.construction-plan-page #projectExperienceActions { display:flex;justify-content:flex-end;gap:10px;align-items:center;padding:7px 0;margin:0;border:0;background:none;min-height:36px; }
+.construction-plan-page #projectExperienceActions>p { display:none; }
+.construction-plan-page #projectExperienceActions button { font-size:10px;padding:5px 10px;min-height:30px;border-radius:6px; }
+.plan-overview { display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.4fr) minmax(0,1.05fr);gap:12px;align-items:stretch;margin-bottom:12px; }
+.construction-plan-page .plan-panel { min-width:0;border:1px solid var(--plan-border);border-radius:12px;background:#fff;padding:15px;box-shadow:0 3px 12px #1c456605;margin:0; }
+.construction-plan-page .plan-panel h2 { color:#112f56;font-size:13px;line-height:1.5;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px; }
+.plan-panel h2 small { font-size:10px;font-weight:400; }
+.plan-icon { display:inline-flex;align-items:center;justify-content:center;color:#1260ef;flex-shrink:0; }
+.plan-icon svg { width:22px;height:22px; }
+.plan-panel-title { display:flex;justify-content:space-between;align-items:flex-start;gap:10px; }
+.plan-panel-title>a,.construction-plan-page .plan-text-button { font-size:10px;background:transparent;border:0;color:#1457ca;padding:0;line-height:1.6;text-decoration:none; }
+.plan-panel-title>a { white-space:nowrap;padding-top:3px; }
+.construction-plan-page .current-action-card { text-align:left;display:flex;flex-direction:column;align-items:flex-start; }
+.current-action-card .action-stage { font-size:10px;color:var(--plan-muted);margin:0 0 5px; }
+.current-action-card .action-task { font-size:14px;line-height:1.5;color:#12315c;font-weight:600;margin:0; }
+.current-action-card #planNextDescription { font-size:12px;line-height:1.8;color:var(--plan-muted);margin:10px 0 14px; }
+.construction-plan-page #currentActionButton { width:100%;margin:0; }
+.construction-plan-page #currentActionButton button { font-size:11px;width:auto;min-height:40px;padding:10px 15px;border-radius:7px; }
+.current-action-card .task-intelligence { font-size:10px;line-height:1.7;color:var(--plan-muted);background:none;margin:10px 0 0;padding:0; }
+.current-action-card .action-cost { font-size:10px;line-height:1.7;color:var(--plan-muted);margin:8px 0; }
+.plan-expense-action { font-size:11px;color:#1457ca;border:1px solid #d4e2f4;border-radius:7px;padding:9px 12px;margin-top:auto; }
+.plan-context-support.task-contractors { margin:0;padding:0;border:0;background:none; }
+.plan-context-support>summary { font-size:10px;min-height:20px;font-weight:400;color:#526b8c; }
+.plan-context-support>.support-muted { font-size:9px!important;line-height:1.6;margin:3px 0 8px; }
+.plan-context-support>div:not(.support-results) { display:none; } /* assignments have their own right-hand panel */
+.plan-context-support .support-recommendation { border:0;border-top:1px solid #e6edf6;border-radius:0;padding:8px 0;margin:0; }
+.plan-context-support .support-recommendation strong { font-size:11px; }
+.plan-context-support .support-recommendation p { font-size:10px;margin:4px 0;line-height:1.5;color:#526b8c; }
+.plan-context-support .support-contacts { gap:6px; }
+.plan-context-support .support-contacts :is(a,button) { min-height:40px;padding:5px 8px;font-size:10px;margin:0; }
+.plan-context-support .support-contacts small { font-size:9px; }
+.plan-context-support .construction-actions { margin:5px 0 0;gap:6px; }
+.plan-context-support .construction-actions button { min-height:40px;font-size:10px;padding:5px 10px;flex:1;margin:0; }
+.plan-context-support>a { display:inline-block;font-size:10px;margin-top:7px; }
+.plan-photo-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px; }
+.construction-plan-page .plan-photo { padding:0;border:0;background:transparent;text-align:left;min-width:0;color:#12315c; }
+.plan-photo-frame { height:78px;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#edf3fa;color:#526b8c;font-size:9px;text-align:center; }
+.plan-photo-frame img { width:100%;height:100%;object-fit:contain;display:block;background:#dfe9f3; }
+.plan-photo strong,.plan-photo small { display:block;font-size:9px;font-weight:400;line-height:1.5;margin-top:3px;overflow-wrap:anywhere; }.plan-photo small { color:#526b8c;font-size:8px; }
+.plan-add-photo { min-height:110px;border:1px dashed #b9cee9;border-radius:7px;background:#fbfdff;color:#16427c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px; }
+.plan-add-photo>span { font-size:25px; }.plan-add-photo strong { font-size:10px; }.plan-add-photo small { font-size:8px;color:#526b8c; }
+.plan-photo-empty { grid-column:1/3;font-size:11px;line-height:1.8;color:#526b8c;margin:0;background:#f5f9fe;padding:16px;border-radius:8px; }
+.plan-lower { display:grid;grid-template-columns:minmax(0,2.35fr) minmax(0,1.05fr);gap:12px;align-items:start; }
+.plan-support { display:grid;gap:12px; }
+.plan-register .plan-panel-title p { font-size:10px;color:#526b8c;margin:0 0 10px 30px; }
+.plan-register #planExpandAll { min-height:32px;font-size:10px;padding:5px 10px;white-space:nowrap;background:white;border-color:#d3e0f2; }
+.construction-plan-page #taskList { display:grid;gap:6px;margin:0;padding:0;list-style:none; }
+.construction-plan-page #taskList .construction-stage { max-width:none;padding:0;border-radius:7px;border-color:#dce7f4;overflow:hidden; }
+.construction-plan-page .construction-stage-toggle { display:grid;grid-template-columns:18px 95px 1fr auto 14px;align-items:center;gap:8px;padding:8px 10px;border:0;background:#f6faff;border-radius:0;font-size:10px;min-height:34px; }
+.construction-stage-toggle>strong { font-size:11px; }.plan-stage-count { color:#526b8c;font-size:9px; }
+.plan-stage-label { position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden; }
+.construction-plan-page .stage-financial { font-size:9px;font-weight:400;color:#526b8c;padding:0;margin:0;white-space:nowrap; }
+.plan-stage-marker { color:#67819e; }.plan-stage-marker.completed { background:#13ac7a;color:#fff;border-radius:50%;text-align:center;font-size:10px;width:14px;height:14px; }.plan-stage-marker.active { color:#1461e8; }
+.construction-plan-page .construction-stage .stage-card-body { display:block;padding:0 8px 5px; }
+.plan-table-heading,.construction-plan-page .construction-stage .construction-task { display:grid;grid-template-columns:minmax(130px,1.8fr) minmax(75px,.9fr) minmax(73px,.9fr) minmax(73px,.9fr) 47px minmax(94px,1fr);gap:8px;align-items:center; }
+.plan-table-heading { background:#f0f5fc;color:#203e68;padding:7px 6px;font-size:8px;font-weight:600;border-radius:5px; }
+.construction-plan-page .construction-stage .construction-task { padding:7px 6px!important;border:0!important;border-bottom:1px solid #e4ecf6!important;border-radius:0!important;margin:0;min-height:40px;box-shadow:none!important; }
+.construction-plan-page .construction-task.is-selected { background:#eef5ff;outline:1px solid #a1bff0;outline-offset:-1px; }
+.construction-plan-page .construction-task h4 { font-size:10px;line-height:1.5;margin:0;font-weight:500; }
+.plan-critical-marker { font-size:8px;color:#8a581b; }
+.construction-plan-page .construction-task-status { justify-self:start;font-size:8px;font-weight:400;background:#edf1f6;color:#475c77;border-radius:9px;padding:3px 6px;line-height:1.3; }
+.construction-plan-page .active>.construction-task-status { background:#e4eeff;color:#1b57b0; }.construction-plan-page .completed>.construction-task-status { background:#ddf8ed;color:#087354; }
+.plan-task-money,.construction-plan-page .construction-evidence-count { font-size:9px;color:#345578;font-variant-numeric:tabular-nums;overflow-wrap:anywhere; }
+.construction-plan-page .construction-task .construction-actions { display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:0; }
+.construction-plan-page .construction-task .construction-actions>button { min-height:25px;font-size:8px;padding:3px 6px;border-radius:4px;width:100%; }
+.construction-plan-page .construction-task .construction-actions>.plan-text-button { min-height:18px;padding:0;width:auto; }
+.plan-register-note { font-size:9px;line-height:1.7;color:#526b8c;margin:10px 0 0; }
+.construction-plan-page .project-associations { padding:0;border:0;background:none;margin:0; }
+.construction-plan-page .project-associations>summary { font-size:10px;min-height:20px;color:#526b8c; }
+.construction-plan-page .support-assignment { display:grid;grid-template-columns:1fr auto;gap:4px 8px;padding:8px 0; }
+.construction-plan-page .support-assignment :is(span,button) { min-height:0;font-size:10px;margin:0; }.construction-plan-page .support-assignment>span { grid-column:1;min-width:0; }.construction-plan-page .support-assignment>button:last-child { grid-column:2;grid-row:1/3;padding:6px;font-size:9px;max-width:80px; }
+.construction-plan-page .support-muted { font-size:11px!important; }
+.plan-add-contractor { display:block;border:1px dashed #cfdef2;padding:10px;border-radius:8px;font-size:11px;color:#1457ca;margin-top:10px; }.plan-add-contractor small { display:block;font-size:10px;color:#526b8c;margin-top:3px; }
+.construction-plan-page .plan-guidance { background:#fff9ef; }.plan-guidance p { font-size:11px;color:#526b8c;line-height:1.7;margin:5px 0; }
+.plan-resources>a { display:flex;justify-content:space-between;font-size:11px;color:#315a90;padding:7px 0;border-bottom:1px solid #edf2f9; }.plan-resources>button { margin-top:10px; }
+.plan-resources details { font-size:10px;margin-top:12px;color:#526b8c; }.plan-resources summary { cursor:pointer;padding:5px 0; }.plan-chart { height:180px; }.plan-resources .material-item { display:flex;justify-content:space-between;gap:6px;font-size:10px;padding:6px 0; }
+.plan-task-extra { font-size:12px;color:#415d80;line-height:1.6; }.plan-task-extra>button,.plan-task-extra>a { display:inline-block;margin:3px;font-size:11px; }.plan-gallery { width:min(850px,calc(100vw - 32px)); }.plan-gallery .plan-photo-grid { margin-top:16px; }.plan-gallery .plan-photo-frame { height:180px; }
+.construction-plan-page .current-action-card .task-intelligence { padding:0!important;background:none!important; }
+.construction-plan-page .current-action-card #currentActionButton { margin:0!important; }
+.construction-plan-page .plan-context-support .support-contacts small { margin:0;line-height:1.4; }
+.construction-plan-page .plan-context-support .support-recommendation .support-contacts { float:left;width:48%; }
+.construction-plan-page .plan-context-support .support-recommendation .construction-actions { margin:0 0 0 50%;display:grid;grid-template-columns:1fr;gap:5px; }
+.construction-plan-page .plan-context-support .support-recommendation::after { content:'';display:block;clear:both; }
+.construction-plan-page .plan-context-support .support-recommendation .support-contacts :is(a,button) { width:calc(50% - 3px);font-size:9px;padding:4px; }
+.construction-plan-page .plan-panel h2 { font-size:14px; }
+.construction-plan-page .construction-task h4 { font-size:11px; }
+.construction-plan-page .plan-task-money,.construction-plan-page .construction-evidence-count { font-size:10px; }
+.construction-plan-page .plan-table-heading { font-size:9px; }
+.construction-plan-page .current-action-card .project-complete-msg { background:none;color:#526b8c;padding:0;font-weight:400;border:0;border-radius:0; }
+.construction-plan-page .current-action-card .task-intelligence>p { background:none!important;padding:0!important;margin:4px 0;font-size:10px; }
+.construction-plan-page #currentActionButton button { margin:0; }
+.construction-plan-page .plan-stage-count { white-space:normal; }
+@media(min-width:601px) and (max-width:800px){.plan-finances { grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:4px 20px; }.plan-finances>span:nth-of-type(2) { grid-column:2;grid-row:1; }.plan-finances>strong:first-of-type { grid-column:1;grid-row:2; }.plan-finances small,.plan-finances .finance-notice { grid-column:1/-1; }.plan-completion { grid-column:1/-1;border:0;justify-content:center; }.plan-completion #planCounts { display:flex;gap:20px; }.plan-photos .plan-photo-grid { grid-template-columns:repeat(6,minmax(0,1fr)); }}
+@media(min-width:1500px){.construction-plan-page .plan-summary { grid-template-columns:180px minmax(240px,1.5fr) minmax(220px,.9fr) minmax(265px,1fr);gap:24px; }.plan-cover { height:130px; }.plan-photo-frame { height:90px; }.construction-plan-page .plan-panel { padding:16px; }.construction-plan-page .plan-finances>strong { font-size:22px; }}
+@media(min-width:801px) and (max-width:1250px){.construction-plan-page .plan-summary { grid-template-columns:110px minmax(150px,1fr) minmax(170px,1fr);gap:14px; }.plan-completion { grid-column:1/-1;justify-content:center; }.plan-ring { width:75px;height:75px;padding:9px; }#planCounts { display:flex;gap:20px;margin-bottom:6px; }.plan-overview { grid-template-columns:1fr 1.4fr; }.plan-photos { grid-column:1/-1; }.plan-photos .plan-photo-grid { grid-template-columns:repeat(6,minmax(0,1fr)); }.plan-lower { grid-template-columns:1fr; }.plan-support { grid-template-columns:repeat(3,minmax(0,1fr)); }}
+@media(max-width:800px){.construction-plan-page .plan-summary { grid-template-columns:115px 1fr;gap:16px;padding:16px; }.plan-finances { border:0;border-top:1px solid #55708c;padding:14px 0 0; }.plan-completion { border-top:1px solid #55708c;padding-top:14px;gap:12px; }.plan-ring { width:85px;height:85px;padding:10px; }.plan-overview { grid-template-columns:1fr 1fr; }.plan-photos { grid-column:1/-1; }.plan-lower { grid-template-columns:1fr; }.plan-support { grid-template-columns:1fr 1fr; }.plan-resources { grid-column:1/-1; }.construction-plan-page .plan-panel { padding:14px; }.plan-photo-frame { height:110px; }}
+@media(max-width:600px){.construction-plan-page .plan-summary { grid-template-columns:85px minmax(0,1fr);gap:13px;padding:14px; }.plan-cover { height:110px; }.construction-plan-page .plan-identity h2 { font-size:17px; }.construction-plan-page .plan-identity p { font-size:10px; }.plan-status-line { margin-top:7px;gap:5px; }.plan-status-line>span { font-size:9px;padding:3px 6px; }.plan-finances { grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:5px 12px; }.plan-finances>span:nth-of-type(2) { grid-column:2;grid-row:1; }.plan-finances>strong:first-of-type { grid-column:1;grid-row:2; }.construction-plan-page .plan-finances>strong { font-size:17px; }.plan-finances small,.plan-finances .finance-notice { grid-column:1/-1; }.plan-completion { grid-column:1/-1;border:0;padding-top:0;justify-content:center;gap:24px; }.plan-ring { width:78px;height:78px; }.plan-ring strong { font-size:20px; }#planCounts { gap:6px;margin-bottom:6px; }.plan-overview,.plan-support { grid-template-columns:1fr; }.plan-photos,.plan-resources { grid-column:auto; }.construction-plan-page .plan-panel h2 { font-size:13px; }.plan-panel h2 small { font-size:9px; }.plan-photos .plan-photo-frame { height:90px; }.construction-plan-page #projectExperienceActions { flex-wrap:wrap;justify-content:flex-start; }.construction-plan-page .construction-stage-toggle { grid-template-columns:14px 80px 1fr 14px;gap:6px;padding:10px 8px; }.plan-stage-count { font-size:8px; }.construction-plan-page .stage-financial { grid-column:2/4;grid-row:2;white-space:normal;font-size:8px; }.plan-chevron { grid-column:4;grid-row:1/3; }.plan-table-heading { display:none; }.construction-plan-page .construction-stage .construction-task { grid-template-columns:1fr 1fr;gap:7px 12px;padding:12px 5px; }.plan-task-name { grid-column:1/-1; }.construction-plan-page .construction-task h4 { font-size:12px; }.construction-plan-page .construction-task-status { font-size:10px; }.construction-plan-page .plan-task-money { font-size:11px; }.plan-task-money::before { content:attr(data-label);display:block;font-size:9px;color:#526b8c;margin-bottom:2px; }.construction-plan-page .construction-evidence-count { grid-column:2;grid-row:2;font-size:10px; }.construction-plan-page .construction-task .construction-actions { grid-column:1/-1;gap:8px; }.construction-plan-page .construction-task .construction-actions>button { width:auto;min-height:36px;font-size:11px;padding:6px 9px; }.construction-plan-page .construction-task .construction-actions>.plan-text-button { min-height:36px; }.plan-register .plan-panel-title { gap:5px; }.plan-register .plan-panel-title h2 { font-size:12px; }.plan-register .plan-panel-title p { margin-left:0; }.plan-context-support .support-contacts :is(a,button),.plan-context-support .construction-actions button { min-height:40px;font-size:11px; }.plan-context-support .support-recommendation strong { font-size:12px; }.plan-context-support .support-recommendation p { font-size:11px; }.plan-context-support .support-contacts small { font-size:10px; }.plan-register-note { font-size:10px; }.plan-gallery .plan-photo-grid { grid-template-columns:1fr 1fr; }}
+
+/* Task Details refinement: the approved workspace outside this dialog is unchanged. */
+#taskModal .task-details-dialog { width:min(940px,calc(100vw - 40px));max-width:min(940px,calc(100vw - 40px))!important;max-height:calc(100dvh - 40px);display:flex;flex-direction:column;padding:0;overflow:hidden;color:#18365c;animation:none; }
+#taskModal .task-dialog-header { flex:0 0 auto;padding:16px 24px 14px;border-bottom:1px solid #dfe8f4;background:#fbfdff; }
+#taskModal .task-dialog-header>p { margin:0 0 6px;font-size:10px;line-height:1.3;letter-spacing:1px;font-weight:650;color:#1457ca; }
+#taskModal #taskModalTitle { margin:0 0 5px;font-size:21px;line-height:1.35;letter-spacing:-.3px;overflow-wrap:anywhere; }
+#taskModal .task-dialog-header>span { display:block;font-size:12px;line-height:1.5;color:#526b8c; }
+#taskModal .task-dialog-body { min-height:0;overflow-y:auto;overscroll-behavior:contain;flex:1 1 auto;padding:18px 24px; }
+#taskModal section { min-width:0; }
+#taskModal h3 { font-size:15px;color:#17375f;margin:0 0 12px;line-height:1.4; }
+#taskModal h3>span,#taskModal label>span { color:#526b8c;font-size:11px;font-weight:400; }
+#taskModal h4 { font-size:12px;font-weight:600;margin:0 0 8px; }
+#taskModal .task-overview-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0;padding:13px 14px;background:#f3f7fc;border:1px solid #e1eaf5;border-radius:9px; }
+#taskModal .task-overview-grid dt { font-size:10px;color:#526b8c;margin:0 0 5px; }
+#taskModal .task-overview-grid dd { font-size:14px;font-weight:600;margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums; }
+#taskModal #taskDetailStatus { display:inline-block;font-size:11px;font-weight:500;border-radius:20px;padding:4px 8px;background:#e5ecf5;color:#425b7b; }
+#taskModal #taskDetailStatus.active { background:#e1edff;color:#1b57b0; }
+#taskModal #taskDetailStatus.completed { background:#ddf8ed;color:#087354; }
+#taskModal .plan-task-extra { margin-top:10px; }
+#taskModal .plan-task-extra :is(button,a) { font-size:11px;min-height:34px;padding:7px 10px;margin:3px 6px 3px 0; }
+#taskModal .plan-task-extra .construction-critical { font-size:11px;line-height:1.6;padding:8px 10px;margin:6px 0; }
+#taskModal .task-completion-action { display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px dashed #dbe5f3;margin:9px 0 0;padding-top:10px; }
+#taskModal .task-completion-action p { font-size:11px;line-height:1.6;color:#526b8c;margin:0; }
+#taskModal #confirmTaskBtn { font-size:11px;min-height:36px;padding:7px 12px;white-space:nowrap;background:#fff;border-color:#bfd1ec; }
+#taskModal .task-editor-grid { display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;border-top:1px solid #dfe8f4;margin-top:18px;padding-top:18px; }
+#taskModal .task-expenses-section { border-left:1px solid #e2eaf5;padding-left:24px; }
+#taskModal .form-group { margin:0 0 13px; }
+#taskModal label { font-size:12px;line-height:1.5;font-weight:600;margin-bottom:5px; }
+#taskModal :is(input,select,textarea) { display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;margin:0;border:1px solid #cddbed;border-radius:7px;padding:9px 10px;line-height:1.5;font:inherit;font-size:12px;background:#fff;color:#18365c; }
+#taskModal :is(input,select) { min-height:40px; }
+#taskModal textarea { min-height:100px;max-height:240px;resize:vertical; }
+#taskModal input[type=file] { padding:5px;font-size:11px; }
+#taskModal input[type=file]::file-selector-button { font:inherit;border:0;border-radius:4px;background:#eaf2ff;color:#1457ca;padding:8px;margin-right:8px;cursor:pointer; }
+#taskModal :is(input,select,textarea,summary,a,button):focus-visible { outline:3px solid #4084f7;outline-offset:2px; }
+#taskModal #taskStorageNote { font-size:11px;line-height:1.6;color:#526b8c;margin:7px 0 2px; }
+#taskModal .task-storage-info { font-size:11px;line-height:1.6;color:#526b8c;margin-top:3px; }
+#taskModal .task-storage-info summary { color:#1457ca;cursor:pointer;padding:4px 0; }
+#taskModal .task-storage-info p { font-size:11px;line-height:1.6;margin:6px 0; }
+#taskModal #taskEvidenceList { margin-bottom:12px; }
+#taskModal #taskEvidenceList>p { font-size:11px;color:#526b8c;margin:0;line-height:1.6; }
+#taskModal .construction-evidence-entry { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;margin:7px 0;padding:8px;border-color:#dce6f3;border-radius:7px;background:#f8fbff; }
+#taskModal .construction-evidence-entry p { font-size:11px;margin:0;line-height:1.5;overflow-wrap:anywhere; }
+#taskModal .construction-evidence-entry button { min-height:34px;font-size:11px;padding:6px 9px;white-space:nowrap; }
+#taskModal .construction-evidence-preview { grid-column:1/-1;max-height:180px;margin:0; }
+#taskModal .task-section-intro,#taskModal .task-ledger-note { font-size:11px;line-height:1.7;color:#526b8c;margin:0 0 13px; }
+#taskModal .task-ledger-note { margin-top:9px;padding:9px 11px;background:#f4f8fd;border-radius:7px; }
+#taskModal .task-expense-meta { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+#taskModal .task-dialog-footer { flex:0 0 auto;margin:0;text-align:left;border-top:1px solid #dce6f3;background:#fbfdff;padding:12px 24px; }
+#taskModal .modal-actions { display:flex;justify-content:flex-end;gap:10px;margin:0; }
+#taskModal .modal-actions button { flex:0 0 auto;width:auto;min-width:120px;margin:0;min-height:42px;padding:10px 19px;border-radius:7px;font-size:12px;font-weight:600; }
+#taskModal #cancelTaskBtn { background:#fff;border:1px solid #cddbed;color:#31547f; }
+#taskModal #taskExpenseError { margin:0;font-size:12px;line-height:1.5; }
+#taskModal #taskExpenseError:not(:empty) { margin-bottom:9px; }
+@media(max-width:600px){
+  #taskModal .task-details-dialog { width:calc(100vw - 20px);max-width:calc(100vw - 20px)!important;max-height:calc(100dvh - 20px);border-radius:12px; }
+  #taskModal .task-dialog-header { padding:14px 16px; }
+  #taskModal #taskModalTitle { font-size:18px; }
+  #taskModal .task-dialog-body { padding:15px 16px; }
+  #taskModal .task-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 10px;padding:12px; }
+  #taskModal .task-overview-grid dd { font-size:13px; }
+  #taskModal .task-editor-grid { grid-template-columns:1fr;gap:18px; }
+  #taskModal .task-expenses-section { border-left:0;border-top:1px solid #e2eaf5;padding:18px 0 0; }
+  #taskModal .task-completion-action { align-items:flex-start; }
+  #taskModal .task-dialog-footer { padding:10px 16px; }
+  #taskModal .modal-actions button { flex:1;min-height:44px;padding:10px; }
+  #taskModal .task-expense-meta { grid-template-columns:1fr;gap:0; }
+}

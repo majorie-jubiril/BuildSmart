@@ -1,143 +1,41 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BuildSmart GH</title>
-
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="premium.css">
-<link rel="icon" href="data:,">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildSmart GH — Home</title>
+<link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="construction.css"><link rel="stylesheet" href="premium.css"><link rel="icon" href="data:,">
+<link rel="stylesheet" href="project-experience.css">
+<link rel="stylesheet" href="contractor-support.css">
 </head>
-
-<body>
-
-<header class="main-header">
-  <h1>BuildSmart GH</h1>
-  <p>Your personal construction planning assistant</p>
-</header>
-
-<main class="dashboard-container">
-
-  <!-- HEADER -->
-  <section class="dashboard-header">
-    <p>Welcome back!</p>
-  </section>
-
-<!-- ========================= -->
-<!-- STAGE TRACKER -->
-<!-- ========================= -->
-<div id="stageTracker" class="stage-tracker"></div>
-
-  <!-- CURRENT PROJECT CARD -->
-  <div class="current-project-card">
-  <h3>Current Project</h3>
-
-  <p id="currentProjectName">My Project</p>
-
-  <!-- Progress -->
-  <div class="progress-section">
-    <div class="progress-header">
-      <span>Progress</span>
-      <span id="progressPercent">0%</span>
-    </div>
-
-    <div class="progress-bar">
-      <div id="progressFill"></div>
-    </div>
-  </div>
-
-  <!-- Info Boxes -->
-    <div class="project-info">
-    <div class="info-box">
-      <span class="label">Budget</span>
-      <span id="projectBudget">₵0</span>
-    </div>
-
-    <div class="info-box">
-        <span class="label">Stage</span>
-        <span id="stageText">Not started</span>
-      </div>
-    </div>
-
-  <!-- CTA -->
-    <button class="primary-btn full-width" onclick="goTo('estimate-result.html')">
-      View Details →
-    </button>
-  </div>
-
-  <!-- QUICK ACTIONS -->
-<section class="quick-actions">
-  <h3>Quick Actions</h3>
-
-  <div class="actions-grid">
-
-    <!-- CREATE PROJECT (PRIMARY ENTRY) -->
-    <div class="action-card" onclick="goTo('create-project.html')">
-      <div class="action-icon blue">🏗️</div>
-      <h4>Create Project</h4>
-      <p>Start a new building project</p>
-    </div>
-
-    <!-- ESTIMATE (TOOL) -->
-    <div class="action-card" onclick="goTo('estimator.html')">
-      <div class="action-icon purple">📊</div>
-      <h4>Estimate</h4>
-      <p>Calculate building costs</p>
-    </div>
-
-    <!-- FIND CONTRACTORS -->
-    <div class="action-card" onclick="goTo('contractors.html')">
-      <div class="action-icon orange">👷</div>
-      <h4>Find Contractors</h4>
-      <p>Browse verified professionals</p>
-    </div>
-
-    <!-- DASHBOARD (TRACK PROGRESS) -->
-    <div class="action-card" onclick="goTo('estimate-result.html')">
-      <div class="action-icon green">📈</div>
-      <h4>Dashboard</h4>
-      <p>Track project progress</p>
-    </div>
-
-  </div>
+<body class="dashboard-home">
+<main class="dashboard-container reference-dashboard">
+<h1 class="sr-only">Project overview</h1>
+<section class="current-project-card" aria-label="Current project">
+<span class="hero-imagery-label" aria-label="Illustrative architectural image, not a photograph of this project">Architectural illustration</span>
+<h3>Current project</h3><p id="currentProjectName">No project selected</p><p id="overviewLocation" class="hero-location">Location not recorded</p>
+<div class="progress-section"><div class="progress-header"><span>Overall task completion</span><strong id="progressPercent">0%</strong></div><div class="progress-bar"><div id="progressFill"></div></div><p id="heroTaskCount">0 of 0 tasks completed</p></div>
+<div class="project-info">
+<a class="info-box" href="expenditure.html"><span class="metric-icon" data-icon="expenses"></span><span><span class="label">Total budget</span><strong id="projectBudget">GH₵0</strong></span><span class="metric-arrow">›</span></a>
+<a class="info-box" href="estimate-result.html"><span class="metric-icon" data-icon="workspace"></span><span><span class="label">Construction status</span><strong id="stageText">Not started</strong></span><span class="metric-arrow">›</span></a>
+</div>
 </section>
-
+<section class="overview-stages" aria-label="Construction stages"><div id="stageTracker" class="stage-tracker"></div></section>
+<div class="dashboard-panels">
+<section class="overview-panel dashboard-task-panel">
+<div class="section-heading"><h2>Tasks</h2><a id="viewAllTasks" href="estimate-result.html?view=tasks#task-register">View All Tasks</a></div>
+<div class="task-tabs" role="group" aria-label="Filter tasks"><button type="button" data-task-filter="all" aria-pressed="true">All Tasks <span id="allTaskCount"></span></button><button type="button" data-task-filter="active" aria-pressed="false">In progress <span id="activeTaskCount"></span></button><button type="button" data-task-filter="completed" aria-pressed="false">Completed <span id="completedTaskCount"></span></button></div>
+<div id="overviewTasks"></div>
+</section>
+<div class="dashboard-middle-column">
+<section class="overview-panel dashboard-budget-panel"><div class="section-heading"><h2>Project budget</h2><a href="expenditure.html">View details</a></div>
+<div class="budget-content"><div class="budget-ring" id="budgetRing"><div><strong id="budgetSpentPercent">—</strong><span>Spent</span></div></div><div class="budget-legend"><div><span class="legend-dot"></span><span>Recorded spending<strong id="projectSpent">GH₵0</strong></span></div><div><span class="legend-dot remaining-dot"></span><span><span id="budgetBalanceCaption">Remaining budget</span><strong id="dashboardBalance">GH₵0</strong></span></div><p><span>Total budget</span><strong id="dashboardBudget">GH₵0</strong></p></div></div><p id="budgetEmptyState" class="budget-context"></p>
+</section>
+<section class="overview-panel dashboard-activity-panel"><div class="section-heading"><h2>Recent activity</h2><a href="estimate-result.html">Workspace</a></div><div id="overviewActivity"></div></section>
+</div>
+<section class="overview-panel dashboard-photos-panel"><div class="section-heading"><h2>Progress photos</h2><a href="estimate-result.html">View tasks</a></div><div id="overviewPhotos" class="progress-photo-grid"></div><p class="photo-storage-note">Photos saved to tasks in this browser. No cloud backup.</p></section>
+</div>
+<section class="next-steps"><div class="next-steps-heading"><span data-icon="workspace"></span><div><h2>Next steps</h2><p>Keep your project moving forward.</p></div></div><a class="next-step-card" href="estimate-result.html"><span data-icon="workspace"></span><span><strong>Continue your project</strong><small id="nextTaskLabel">Review your construction tasks</small></span><span>›</span></a><a class="next-step-card" href="expenditure.html"><span data-icon="expenses"></span><span><strong>Review expenditure</strong><small>Keep expense records up to date</small></span><span>›</span></a><a class="next-step-card" href="contractors.html"><span data-icon="contractors"></span><span><strong>Find professionals</strong><small>Optional support for your build</small></span><span>›</span></a></section>
+<section class="quick-actions" aria-label="Project tools"><h2 class="sr-only">Project tools</h2><div class="actions-grid"><a class="action-card" href="create-project.html"><span class="action-icon" data-icon="projects"></span><h4>Create project</h4><p>Start a new building project</p></a><a class="action-card" href="estimator.html"><span class="action-icon" data-icon="estimate"></span><h4>Estimate</h4><p>Calculate building costs</p></a><a class="action-card" href="contractors.html"><span class="action-icon" data-icon="contractors"></span><h4>Find contractors</h4><p>Explore construction professionals</p></a><a class="action-card" href="estimate-result.html"><span class="action-icon" data-icon="workspace"></span><h4>Workspace</h4><p>Track project progress</p></a></div></section>
 </main>
-
-<nav class="bottom-nav">
-
-  <a href="index.html" class="nav-item active">
-    <span>🏠</span>
-    <p>Home</p>
-  </a>
-
-  <a href="projects.html" class="nav-item">
-    <span>📁</span>
-    <p>Projects</p>
-  </a>
-
-  <a href="contractors.html" class="nav-item">
-    <span>👷</span>
-    <p>Contractors</p>
-  </a>
-
-  <a href="estimate-result.html" class="nav-item">
-    <span>📊</span>
-    <p>Progress</p>
-  </a>
-
-  <a href="saved.html" class="nav-item">
-    <span>❤️</span>
-    <p>Saved</p>
-  </a>
-
-</nav>
-
-<!-- ===== SCRIPT ===== -->
-<script src="script.js"></script>
-
-</body>
-</html>
-
+<script src="finance.js"></script><script src="construction.js"></script><script src="evidence.js"></script><script src="task-navigation.js"></script><script src="contractor-model.js"></script><script src="contractor-support.js"></script><script src="script.js"></script><script src="construction-ui.js"></script><script src="project-experience.js"></script><script src="ui.js" defer></script>
+</body></html>

@@ -1,0 +1,92 @@
+/* Scoped completion review and cover picker; the dashboard composition is retained. */
+/* Only homeowner photographs use this contained media region. The approved
+   architectural background and the hero's existing grid row sizes are retained. */
+.reference-dashboard .current-project-card.has-project-photo { background-image:linear-gradient(90deg,#092043,#17365f);min-height:var(--project-cover-min-height); }
+.project-hero-photo { position:absolute;right:0;top:0;bottom:0;width:30%;overflow:hidden;isolation:isolate;background:#112d50;border-left:1px solid #ffffff20; }
+.project-hero-photo::before { content:'';position:absolute;inset:-20px;background-image:linear-gradient(#0c234880,#0c234880),var(--project-cover-image);background-size:cover;background-position:center;filter:blur(14px);z-index:-1; }
+.project-hero-photo img { display:block;width:100%;height:100%;object-fit:contain;object-position:center;padding:26px 12px 12px;box-sizing:border-box; }
+.reference-dashboard .has-project-photo #currentProjectName { grid-column:1/9; }
+.reference-dashboard .has-project-photo .hero-location { grid-column:1/9; }
+.reference-dashboard .has-project-photo .progress-section { grid-column:1/4; }
+.reference-dashboard .has-project-photo .project-info { grid-column:4/9; }
+.reference-dashboard .has-project-photo .hero-imagery-label { z-index:1;background:#0b234be6;border-radius:4px;padding:2px 5px; }
+@media(min-width:1201px) {
+  .reference-dashboard .current-project-card.has-project-photo { grid-template-rows:repeat(4,auto); }
+}
+@media(min-width:521px) and (max-width:1200px) {
+  .reference-dashboard .has-project-photo .progress-section { grid-column:1/5; }
+  .reference-dashboard .has-project-photo .project-info { grid-column:5/9;gap:8px; }
+  .reference-dashboard .has-project-photo .info-box { padding:10px 7px;gap:4px; }
+  .reference-dashboard .has-project-photo .info-box strong { font-size:12px; }
+  .reference-dashboard .has-project-photo .info-box .metric-icon,
+  .reference-dashboard .has-project-photo .info-box .metric-arrow { display:none; }
+}
+@media(min-width:521px) and (max-width:700px), (min-width:801px) and (max-width:1000px) {
+  .reference-dashboard .has-project-photo .progress-section { grid-column:1/4; }
+  .reference-dashboard .has-project-photo .project-info { grid-column:4/9; }
+  .reference-dashboard .has-project-photo .progress-header { font-size:10px;line-height:14px;gap:4px; }
+  .reference-dashboard .has-project-photo #progressPercent { line-height:30.4px; }
+  .reference-dashboard .has-project-photo #heroTaskCount { font-size:10px; }
+  .reference-dashboard .has-project-photo .info-box { padding:6px; }
+  .reference-dashboard .has-project-photo .info-box .label { font-size:9px; }
+  .reference-dashboard .has-project-photo .info-box strong { font-size:10.5px; }
+}
+@media(min-width:521px) and (max-width:700px) {
+  .reference-dashboard .has-project-photo #currentProjectName { font-size:24px;line-height:33.6px; }
+}
+@media(max-width:520px) {
+  .reference-dashboard .current-project-card.has-project-photo { background-image:linear-gradient(90deg,#092043,#17365f); }
+  .reference-dashboard .has-project-photo #currentProjectName { grid-column:1/-1; }
+  .reference-dashboard .has-project-photo .hero-location { grid-column:1/-1;width:54%; }
+  .reference-dashboard .has-project-photo .progress-section { grid-column:1/-1;width:54%; }
+  .reference-dashboard .has-project-photo .progress-header { font-size:10px;gap:4px; }
+  .reference-dashboard .has-project-photo .project-info { grid-column:1/-1;gap:10px; }
+  .reference-dashboard .has-project-photo .project-hero-photo { grid-column:2;grid-row:3/5;inset:0 12px 0 12px;width:auto;border:1px solid #ffffff20;border-radius:8px; }
+  .project-hero-photo img { padding:5px; }
+}
+.project-experience-toolbar { grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:-4px 0 14px; }
+.project-experience-toolbar p { margin:0 auto 0 0;font-size:12px;color:#3b5577; }
+.project-experience-toolbar button { font-size:12px;padding:9px 14px;min-height:42px; }
+.project-experience-dialog { position:fixed;inset:0;margin:auto;color:#142d52;border:1px solid #d8e3f1;border-radius:16px;padding:28px;width:min(800px,calc(100vw - 32px));max-height:90dvh;overflow:auto;box-shadow:0 24px 90px #10244740; }
+.project-experience-dialog::backdrop { background:rgba(11,28,52,.68); }
+.project-experience-dialog h2 { font-size:27px;margin:5px 0 20px; }
+.project-experience-dialog h3 { font-size:18px;margin:20px 0 10px; }
+.project-experience-dialog h4 { font-size:13px;margin:16px 0 12px; }
+.project-experience-dialog p { font-size:13px;line-height:1.65; }
+.project-experience-dialog .completion-eyebrow { font-size:10px;letter-spacing:1.4px;font-weight:650;color:#526c91;margin:0; }
+.completion-project-heading { border-bottom:1px solid #e3ebf5;padding-bottom:12px; }
+.completion-project-heading h3 { margin:0 0 5px;font-size:23px; }
+.completion-project-heading p { margin:0; }
+.completion-stage-summary { display:grid;grid-template-columns:1fr 1fr;gap:9px;list-style:none;margin:18px 0;padding:0; }
+.completion-stage-summary li { background:#f0f7f3;color:#1d6444;border:1px solid #d9ebdf;border-radius:8px;padding:10px 12px;font-size:12px; }
+.completion-task-total { color:#1e426f;font-weight:650; }
+.completion-financial-summary { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0; }
+.completion-financial-summary>div { background:#f3f7fc;border:1px solid #e0e8f3;border-radius:10px;padding:14px;min-width:0; }
+.completion-financial-summary dt { font-size:11px;color:#526783; }
+.completion-financial-summary dd { font-size:18px;font-weight:650;margin:7px 0 0;color:#173b68;white-space:nowrap;font-variant-numeric:tabular-nums; }
+.completion-disclaimer,.cover-storage-note { color:#526783!important;font-size:12px!important; }
+.project-cover-choices { padding:15px;border:1px solid #dde6f3;border-radius:11px;margin:14px 0;min-width:0; }
+.project-cover-choices legend { font-size:12px;padding:0 8px;color:#526783; }
+.project-cover-option { display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #dce6f2;border-radius:8px;background:#f8fbff;margin-bottom:12px;font-size:13px;cursor:pointer; }
+.project-experience-dialog input[type=radio] { width:18px;height:18px;min-height:18px;flex-shrink:0;accent-color:#1259ed; }
+.project-cover-gallery { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px; }
+.project-cover-photo { display:grid;grid-template-columns:20px minmax(0,1fr);gap:6px;border:1px solid #dce5f1;padding:9px;border-radius:9px;cursor:pointer;min-width:0; }
+.project-cover-photo:has(input:checked),.project-cover-option:has(input:checked) { border-color:#3979f6;box-shadow:0 0 0 1px #3979f6; }
+.project-cover-photo:has(input:disabled) { background:#f6f8fb; }
+.cover-photo-preview { grid-column:1/-1;grid-row:1;min-height:105px;height:115px;background:#f0f5fb;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:#526783; }
+.cover-photo-preview img { height:100%;width:100%;object-fit:cover; }
+.project-cover-photo input { grid-column:1;grid-row:2/4; }
+.project-cover-photo strong { font-size:12px;color:#28466e;line-height:1.5; }
+.project-cover-photo small { font-size:10px;color:#526783;overflow-wrap:anywhere; }
+.project-cover-gallery>.ui-empty { grid-column:1/-1; }
+.project-experience-actions { display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;padding-top:18px;border-top:1px solid #e4ebf5;margin-top:18px; }
+.project-experience-actions button { min-height:44px;font-size:13px; }
+.project-experience-error { color:#9e2525!important;min-height:0;margin:10px 0; }
+.project-experience-error:empty { display:none; }
+.project-experience-dialog :focus-visible { outline:3px solid #3979f6;outline-offset:3px; }
+.project-experience-dialog button:disabled { opacity:.6;cursor:wait; }
+.congratulations-dialog { width:min(550px,calc(100vw - 32px));padding:36px; }
+.congratulations-dialog h2 { font-size:32px;color:#163f72; }
+.congratulations-dialog .primary-btn { margin-top:16px; }
+@media(max-width:800px) { .completion-financial-summary { grid-template-columns:1fr; }.completion-financial-summary>div { display:flex;justify-content:space-between;align-items:center;gap:12px; }.completion-financial-summary dd { margin:0; }.project-experience-toolbar { justify-content:flex-start; }.project-experience-toolbar p { width:100%; } }
+@media(max-width:520px) { .project-experience-dialog { padding:22px 18px; }.project-experience-dialog h2 { font-size:23px; }.completion-stage-summary { grid-template-columns:1fr; }.project-cover-gallery { grid-template-columns:1fr 1fr;gap:9px; }.cover-photo-preview { height:100px; }.completion-financial-summary dd { font-size:16px; }.project-experience-actions { justify-content:stretch; }.project-experience-actions button { flex:1;min-width:120px; }.project-experience-toolbar button { flex:1; }.project-experience-dialog .finance-notice { overflow-wrap:anywhere; }.congratulations-dialog h2 { font-size:29px; } }

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expenditure | BuildSmart GH</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="finance.css">
+  <link rel="icon" href="data:,">
+<link rel="stylesheet" href="premium.css">
+</head>
+<body class="finance-page">
+  <header class="main-header"><h1>Project Expenditure</h1><p id="expenseProjectName"></p></header>
+  <main class="finance-container">
+    <a href="estimate-result.html">← Project workspace</a>
+    <section class="finance-summary" aria-label="Project finances">
+      <div><span>Planned budget</span><strong id="financeBudget"></strong></div>
+      <div><span>Recorded spending</span><strong id="financeSpent"></strong></div>
+      <div><span id="financeBalanceLabel">Remaining budget</span><strong id="financeBalance"></strong></div>
+    </section>
+    <p class="form-subtext">Recorded spending includes only expenses you enter. Estimates are plans, not payments.</p>
+    <p id="financeRevision" class="form-subtext"></p>
+    <div id="financeLegacy" class="finance-notice" hidden></div>
+    <p id="financeMessage" role="status" aria-live="polite"></p>
+    <div class="finance-toolbar"><h2>Recorded expenses</h2><button id="addExpenseBtn" class="primary-btn" type="button">Add expense</button></div>
+    <section id="expenseEditor" class="finance-card" aria-labelledby="expenseEditorTitle" hidden>
+      <h2 id="expenseEditorTitle">Add expense</h2>
+      <form id="expenseForm">
+        <div class="finance-form-grid">
+          <div><label for="expenseDate">Date</label><input id="expenseDate" type="date" required></div>
+          <div><label for="expenseAmount">Amount (GH₵)</label><input id="expenseAmount" type="text" inputmode="decimal" placeholder="0.00" required></div>
+          <div class="finance-wide"><label for="expenseDescription">Description</label><input id="expenseDescription" maxlength="240" required></div>
+          <div><label for="expenseCategory">Category</label><select id="expenseCategory" required></select></div>
+          <div><label for="expenseStage">Stage (optional)</label><select id="expenseStage"></select></div>
+          <div><label for="expenseTask">Task (optional)</label><select id="expenseTask"></select></div>
+          <div class="finance-wide"><label for="expenseNotes">Notes (optional)</label><textarea id="expenseNotes" maxlength="4000" rows="3"></textarea></div>
+        </div>
+        <p id="expenseFormError" role="alert"></p>
+        <div class="finance-actions"><button id="saveExpenseBtn" class="primary-btn" type="submit">Save expense</button><button id="cancelExpenseBtn" class="secondary-btn" type="button">Cancel</button></div>
+      </form>
+    </section>
+    <section class="finance-filters" aria-label="Filter expenses">
+      <div><label for="filterCategory">Category</label><select id="filterCategory"></select></div>
+      <div><label for="filterStage">Stage</label><select id="filterStage"></select></div>
+      <div><label for="filterFrom">From date</label><input id="filterFrom" type="date"></div>
+      <div><label for="filterTo">To date</label><input id="filterTo" type="date"></div>
+      <button id="clearExpenseFilters" class="secondary-btn" type="button">Clear filters</button>
+    </section>
+    <p id="expenseFilterSummary" role="status"></p>
+    <div id="expenseList" class="finance-list"></div>
+    <h2>Stage finances</h2>
+    <div id="financeStages" class="finance-stage-grid"></div>
+    <p id="financeUnallocated" class="form-subtext"></p>
+    <p class="form-subtext">Planned allocation: Foundation 20%, Structure 30%, Roofing 20%, Windows 10%, Finishing 20%. These are planning allocations, not professionally validated cost benchmarks.</p>
+  </main>
+  <nav class="bottom-nav"><a href="index.html">Home</a><a href="projects.html">Projects</a><a href="estimate-result.html">Workspace</a><a href="expenditure.html" class="active">Expenses</a></nav>
+  <script src="finance.js"></script>
+  <script src="construction.js"></script>
+<script src="evidence.js"></script>
+<script src="script.js"></script>
+<script src="construction-ui.js"></script><script src="project-experience.js"></script>
+  <script src="expenditure.js"></script>
+<script src="ui.js" defer></script>
+</body>
+</html>

@@ -324,6 +324,8 @@ function initializeProjectState() {
   // 🚫 NO FALLBACK CREATION
   // =========================
   if (!state) {
+    currentProjectId = null;
+    localStorage.removeItem("currentProjectId");
     console.warn("⚠️ No active project found");
     return null; // ❗ STOP here — do NOT fabricate a project
   }
@@ -338,13 +340,7 @@ function initializeProjectState() {
     state.completedStages = [];
   }
 
-  if (!state.spent) {
-    state.spent = 0;
-  }
-
-  if (!state.currentStage) {
-    state.currentStage = "foundation";
-  }
+  // Compatibility stage selection is reconciled from tasks below.
 
   if (!state.stages || state.stages.length === 0) {
     state.stages = getDefaultStages();
@@ -369,6 +365,8 @@ function initializeProjectState() {
   // =========================
   // 🔁 SYNC BACK TO STORAGE (IMPORTANT)
   // =========================
+  Construction.reconcile(state);
+  Financials.prepareProject(state);
   const index = projects.findIndex(p => p.id === state.id);
   if (index !== -1) {
     projects[index] = state;
@@ -387,19 +385,26 @@ function saveProjectState() {
   // =========================
   // UPDATE CURRENT PROJECT
   // =========================
-  const index = projects.findIndex(p => p.id === projectState.id);
-
-  if (index !== -1) {
-    projects[index] = projectState;
-  } else {
-    projects.push(projectState);
+  const fresh = JSON.parse(localStorage.getItem("projects") || "[]");
+  if (!Array.isArray(fresh)) throw new Error("Project records need review. No data was replaced.");
+  const index = fresh.findIndex(p => p.id === projectState.id);
+  if (index === -1) throw new Error("This project is no longer available. Reopen your projects.");
+  // Nonfinancial actions must not replace newer ledger records from another tab.
+  if (fresh[index].expenses !== undefined) projectState.expenses = fresh[index].expenses;
+  if (fresh[index].legacyFinancials) projectState.legacyFinancials = fresh[index].legacyFinancials;
+  // Cover/review edits commit independently against fresh records, like the ledger.
+  for (const field of ["projectCover", "projectPhotos", "completionReview", "contractorAssignments"]) {
+    if (Object.prototype.hasOwnProperty.call(fresh[index], field)) projectState[field] = fresh[index][field];
+    else delete projectState[field];
   }
+  fresh[index] = projectState;
 
   // =========================
   // SAVE EVERYTHING
   // =========================
-  localStorage.setItem("projects", JSON.stringify(projects));
+  localStorage.setItem("projects", JSON.stringify(fresh));
   localStorage.setItem("currentProjectId", projectState.id);
+  projects = fresh;
 }
 
 // ===============================
@@ -413,6 +418,189 @@ function loadProjectState() {
     currentProjectId = projectState.id;
     localStorage.setItem("currentProjectId", currentProjectId);
   }
+}
+
+// Estimation and management always belong to an explicitly selected project.
+function requireProjectContext() {
+  if (projectState?.id === currentProjectId &&
+      projects.some(project => project.id === currentProjectId)) {
+    return true;
+  }
+
+  window.location.replace("create-project.html?reason=project-required");
+  return false;
+}
+
+// Financial edits commit a fresh project collection before updating the visible state.
+function persistExpenseChange(operation) {
+  const storedId = localStorage.getItem("currentProjectId");
+  if (!projectState || storedId !== currentProjectId || projectState.id !== currentProjectId) {
+    throw new Error("Project selection changed. Reopen the project before recording an expense.");
+  }
+  const fresh = JSON.parse(localStorage.getItem("projects") || "[]");
+  if (!Array.isArray(fresh)) throw new Error("Project records need review. No data was replaced.");
+  const index = fresh.findIndex(project => project.id === currentProjectId);
+  if (index < 0) throw new Error("This project is no longer available. No expense was saved.");
+  const candidate = JSON.parse(JSON.stringify(fresh[index]));
+  Financials.prepareProject(candidate);
+  const result = operation(candidate);
+  fresh[index] = candidate;
+  localStorage.setItem("projects", JSON.stringify(fresh));
+  projects = fresh;
+  projectState = candidate;
+  return result;
+}
+
+function legacyFinancialNotice(project) {
+  const legacy = project?.legacyFinancials;
+  if (!legacy) return "";
+  const oldSpent = Number(legacy.spent) || 0;
+  const oldTaskTotal = (legacy.taskActualCosts || []).reduce((sum, task) => sum + (Number(task.actualCost) || 0), 0);
+  if (!oldSpent && !oldTaskTotal) return "";
+  return `Unreconciled historical amounts: project figure ${Financials.format(oldSpent)}; task figures total ${Financials.format(oldTaskTotal)}. These may overlap and may have been generated from estimates. They are preserved separately and excluded from recorded spending. Add only expenses you can substantiate; do not add both totals automatically.`;
+}
+
+let taskUpdateBusy = false;
+
+function recordTaskCompletion() { return updateTaskFromModal("completed"); }
+
+async function updateTaskFromModal(target) {
+  const modal = document.getElementById("taskModal");
+  if (!modal || modal.classList.contains("hidden")) return { changed: false };
+  const context = { ...currentTaskContext };
+  const amount = document.getElementById("taskCostInput").value.trim();
+  const expense = amount ? { amount, description: document.getElementById("taskExpenseDescription").value, date: document.getElementById("taskExpenseDate").value, category: document.getElementById("taskExpenseCategory").value, stageId: context.stageId, taskId: context.taskId, notes: document.getElementById("taskNotesInput").value } : null;
+  const result = await requestTaskTransition(context.stageId, context.taskId, target, {
+    projectId: context.projectId, notes: document.getElementById("taskNotesInput").value,
+    files: [...document.getElementById("taskImageInput").files], expense,
+    submissionId: context.submissionId, expectedUpdatedAt: context.updatedAt, fromModal: true
+  });
+  if (result.saved) closeTaskModal({ saved: true });
+  return result;
+}
+
+async function requestTaskTransition(stageId, taskId, target, options = {}) {
+  if (taskUpdateBusy) return { changed: false, busy: true };
+  taskUpdateBusy = true;
+  const buttons = [document.getElementById("confirmTaskBtn"), document.getElementById("saveTaskInfoBtn")].filter(Boolean);
+  buttons.forEach(button => { button.disabled = true; });
+  let storedFiles = { attachments: [], createdIds: [] };
+  const scope = { projectId: options.projectId || projectState?.id, stageId, taskId };
+  let committed = false;
+  try {
+    const load = () => {
+      if (!projectState || scope.projectId !== projectState.id || currentProjectId !== scope.projectId || localStorage.getItem("currentProjectId") !== scope.projectId) throw new Error("Project selection changed. Reopen the project before updating this task.");
+      const collection = JSON.parse(localStorage.getItem("projects") || "[]");
+      if (!Array.isArray(collection)) throw new Error("Project records need review. No task data was replaced.");
+      const index = collection.findIndex(project => project.id === scope.projectId);
+      if (index < 0) throw new Error("This project is no longer available.");
+      const candidate = JSON.parse(JSON.stringify(collection[index]));
+      const reference = Construction.locate(candidate, stageId, taskId);
+      return { collection, index, candidate, ...reference };
+    };
+    let loaded = load();
+    if (options.fromModal && loaded.task.updatedAt !== options.expectedUpdatedAt) throw new Error("This task changed in another tab. Reopen it before saving your changes.");
+    if (target && (loaded.task.status === "completed" || loaded.task.status === target)) return { changed: false, saved: false };
+    const expectedUpdatedAt = loaded.task.updatedAt;
+    if (options.notes !== undefined && (typeof options.notes !== "string" || options.notes.length > 4000)) throw new Error("Keep task notes within 4,000 characters.");
+    if (options.expense) Financials.validate(loaded.candidate, options.expense);
+    const files = options.files || [];
+    if (files.length && loaded.task.evidence !== undefined && !Array.isArray(loaded.task.evidence)) throw new Error("Existing file records need review. They have been preserved; save notes without new files.");
+    if (target) {
+      const guidance = Construction.guidance(loaded.candidate, stageId, taskId);
+      if (!options.acknowledged && !await ConstructionUI.confirmGuidance(guidance)) return { changed: false, cancelled: true };
+    }
+    if (files.length) storedFiles = await EvidenceStore.putMany(scope, files);
+    loaded = load();
+    if (loaded.task.updatedAt !== expectedUpdatedAt) throw new Error("This task changed in another tab. Reopen it before saving your changes.");
+    if (target && loaded.task.status === "completed") return { changed: false, saved: false };
+    const wasComplete = Construction.summary(loaded.candidate).isCompleted;
+    const transition = target ? Construction.transition(loaded.candidate, stageId, taskId, target, true) : { changed: false };
+    if (options.notes !== undefined) {
+      if (loaded.task.notes !== options.notes) loaded.task.notesUpdatedAt = new Date().toISOString();
+      loaded.task.notes = options.notes;
+    }
+    if (storedFiles.attachments.length) {
+      const entries = new Map((loaded.task.evidence || []).map(entry => [entry.id, entry]));
+      storedFiles.attachments.forEach(entry => entries.set(entry.id, entry));
+      if (entries.size > EvidenceStore.LIMITS.taskFiles) throw new Error("A task can hold up to 6 files. Existing files have been preserved.");
+      loaded.task.evidence = [...entries.values()];
+    }
+    if (options.notes !== undefined || storedFiles.attachments.length) loaded.task.updatedAt = new Date().toISOString();
+    if (options.expense) Financials.upsert(loaded.candidate, options.expense, null, options.submissionId);
+    const progress = Construction.reconcile(loaded.candidate);
+    loaded.collection[loaded.index] = loaded.candidate;
+    localStorage.setItem("projects", JSON.stringify(loaded.collection));
+    committed = true;
+    projects = loaded.collection;
+    projectState = loaded.candidate;
+    if (target === "completed" && transition.changed) {
+      try { recordContractorTaskCompletion(stageId, loaded.task); } catch (error) { console.warn("Contractor performance record was not updated:", error); }
+    }
+    if (target === 'active') window.TaskNavigation?.remember(stageId, taskId);
+    refreshUI();
+    if (!wasComplete && progress.isCompleted) showProjectCompletion();
+    ConstructionUI.message(target === "completed" ? "Task completed. Spending changes only when you explicitly record an expense." : target === "active" ? "Task started. Other stages remain available." : "Task details saved.");
+    return { changed: transition.changed, saved: true };
+  } catch (error) {
+    if (options.fromModal) document.getElementById("taskExpenseError").textContent = error.message;
+    ConstructionUI.message(error.message);
+    return { changed: false, saved: false, error: error.message };
+  } finally {
+    if (!committed && storedFiles.createdIds.length) {
+      try { await EvidenceStore.removeCreated(storedFiles.createdIds, scope); } catch (error) { ConstructionUI.message(error.message); }
+    }
+    buttons.forEach(button => { button.disabled = false; });
+    taskUpdateBusy = false;
+  }
+}
+
+
+function recordContractorTaskCompletion(stageId, task) {
+const contractor = Object.values(projectState.hiredContractors || {})[0];
+
+  if (contractor) {
+  let performance = JSON.parse(localStorage.getItem("contractorPerformance")) || {};
+
+  // =========================
+  // 🧠 CONTRACTOR PERFORMANCE (UPGRADED)
+  // =========================
+
+  performance[contractor.name] = {
+    completed: 0,
+    totalVariance: 0,
+    onBudget: 0,
+    successful: 0 // ✅ FIX
+  };
+
+  const estimated = task.estimatedCost || 0;
+  const actual = Financials.taskActual(projectState, stageId, task.id);
+  const variance = actual - estimated;
+
+  // update metrics
+  performance[contractor.name].completed += 1;
+  performance[contractor.name].totalVariance += variance;
+
+  // on-budget tracker
+  if (actual <= estimated) {
+    performance[contractor.name].onBudget += 1;
+  }
+
+  localStorage.setItem("contractorPerformance", JSON.stringify(performance));
+
+  // ✅ update inside the block (CRITICAL)
+  performance[contractor.name].successful += 1;
+
+  localStorage.setItem("contractorPerformance", JSON.stringify(performance));
+}
+}
+
+function appendTaskExpenseAction(container, stage, task) {
+  const link = document.createElement("a");
+  link.className = "task-expense-link";
+  link.href = `expenditure.html?new=1&stage=${encodeURIComponent(stage.id)}&task=${encodeURIComponent(task.id)}`;
+  link.textContent = "Record expense";
+  container.appendChild(link);
 }
 
 // ===============================
@@ -462,6 +650,11 @@ function initApp() {
   // =========================
   loadProjectState();
 
+  const path = window.location.pathname;
+  const requiresProject = ["estimator.html", "estimate-result.html", "project-details.html", "expenditure.html"]
+    .some(page => path.endsWith(page));
+  if (requiresProject && !requireProjectContext()) return;
+
   // =========================
   // GLOBAL FEATURES (ALL PAGES)
   // =========================
@@ -471,7 +664,6 @@ function initApp() {
   // =========================
   // PAGE DETECTION
   // =========================
-  const path = window.location.pathname;
 
   if (path.includes("estimator.html")) {
     initEstimatorUI();
@@ -488,10 +680,6 @@ function initApp() {
 
   if (path.includes("saved.html")) {
     initSavedPage();
-  }
-
-  if (path.includes("estimate-result.html")) {
-    initEstimateResultPage();
   }
 
   if (path.includes("estimate-result.html")) {
@@ -516,13 +704,10 @@ function initApp() {
     if (e.target.id === "confirmTaskBtn") {
       console.log("CONFIRM CLICKED");
 
-      const { stageId, taskId } = currentTaskContext;
-
-      if (stageId && taskId) {
-        completeTask(stageId, taskId);
-        closeTaskModal();
-      }
+      recordTaskCompletion();
     }
+
+    if (e.target.id === "saveTaskInfoBtn") { updateTaskFromModal(null); }
 
     // ✅ CANCEL BUTTON
     if (e.target.id === "cancelTaskBtn") {
@@ -562,220 +747,24 @@ function getNextStage(currentStage) {
 // ===============================
 // COMPLETE CURRENT TASK (WRAPPER)
 // ===============================
-function completeTask(stageId, taskId) {
-  if (!projectState) return;
-
-  const stage = projectState.stages.find(s => s.id === stageId);
-  if (!stage) return;
-
-  const task = stage.tasks.find(t => t.id === taskId);
-  if (!task || task.status === "completed") return;
-
-  // =========================
-  // REQUIRE CONTRACTOR
-  // =========================
-  const requiredCapability = task.requiredCapability;
-  const hired = projectState?.hiredContractors || {};
-
-  // 🔥 capability-based validation
-  /*const hasCapability = hasRequiredCapability(hired, requiredCapability);
-
-  if (!hasCapability) {
-    showAlert(
-      `This task requires ${requiredCapability || "specialized"} work. Please hire a suitable contractor.`,
-      () => {
-        window.location.href = "contractors.html";
-      }
-    );
-    return;
-  }*/
-
-  const hasCapability = hasRequiredCapability(hired, requiredCapability);
-
-  // TEMP FIX: allow completion even if capability check fails
-    if (!hasCapability) {
-      console.warn("⚠️ Capability check failed — allowing for now");
-    }
-
-  // =========================
-  // MARK COMPLETE (CRITICAL FIX)
-  // =========================
-  task.status = "completed";
-  task.progress = 100;
-  showToast("Task completed successfully ✅");
-
-  // =========================
-  // 💰 ACTUAL COST SIMULATION
-  // =========================
-  task.actualCost = task.actualCost || task.estimatedCost;
-
-  // add to project total spent
-  projectState.spent = (projectState.spent || 0) + task.actualCost;
-
-  // =========================
-  // PERFORMANCE TRACKING
-  // =========================
-  const contractor = Object.values(projectState.hiredContractors || {})[0];
-
-  if (contractor) {
-  let performance = JSON.parse(localStorage.getItem("contractorPerformance")) || {};
-
-  // =========================
-  // 🧠 CONTRACTOR PERFORMANCE (UPGRADED)
-  // =========================
-
-  performance[contractor.name] = {
-    completed: 0,
-    totalVariance: 0,
-    onBudget: 0,
-    successful: 0 // ✅ FIX
-  };
-
-  const estimated = task.estimatedCost || 0;
-  const actual = task.actualCost || 0;
-  const variance = actual - estimated;
-
-  // update metrics
-  performance[contractor.name].completed += 1;
-  performance[contractor.name].totalVariance += variance;
-
-  // on-budget tracker
-  if (actual <= estimated) {
-    performance[contractor.name].onBudget += 1;
-  }
-
-  localStorage.setItem("contractorPerformance", JSON.stringify(performance));
-
-  // ✅ update inside the block (CRITICAL)
-  performance[contractor.name].successful += 1;
-
-  localStorage.setItem("contractorPerformance", JSON.stringify(performance));
+function completeTask(stageId, taskId, options = {}) {
+  return requestTaskTransition(stageId, taskId, "completed", options);
 }
 
-  // =========================
-  // UNLOCK NEXT TASK (KEY FIX)
-  // =========================
-  const nextTask = stage.tasks.find(t => t.status !== "completed");
-
-  if (nextTask) {
-    nextTask.status = "pending"; // user must click Start
-  }
-
-  // =========================
-  // STAGE COMPLETION (CRITICAL FIX)
-  // =========================
-  const allCompleted = stage.tasks.every(t => t.status === "completed");
-
-  if (allCompleted) {
-    showToast(`🎉 ${stage.name || "Stage"} completed!`);
-    // ✅ mark stage complete
-    if (!projectState.completedStages.includes(stageId)) {
-      projectState.completedStages.push(stageId);
-    }
-
-    const nextStage = getNextStage(stageId);
-
-    if (nextStage !== stageId) {
-      projectState.currentStage = nextStage;
-    } else {
-      // ✅ FINAL PROJECT COMPLETION
-      projectState.currentStage = null;
-      projectState.isCompleted = true;
-      showProjectCompletion();
-      // 🆕 SET END DATE (SAFE)
-      if (!projectState.endDate) {
-        projectState.endDate = new Date().toISOString();
-      }
-    }
-  }
-
-  // =========================
-  // STAGE COMPLETION
-  // =========================
-  saveProjectState();
-  refreshUI();
-
-  // ===========================
-  // 🔔 NEXT TASK GUIDANCE
-  // ===========================
-  const currentStageObj = projectState.stages.find(
-    s => s.id === projectState.currentStage
-  );
-
-  if (currentStageObj) {
-    const nextTask = currentStageObj.tasks.find(
-      t => t.status !== "completed"
-    );
-
-    if (nextTask) {
-      const role = nextTask.requiredContractor;
-
-      showAlert(
-        `🎉 Task completed!\n\nNext: ${nextTask.name}\n\nYou may need a ${role}.`,
-        () => {
-          window.location.href = `contractors.html?role=${encodeURIComponent(role)}`;
-        },
-        "success"
-      );
-    }
-}
+function renderProjectDates() {
+  const target = document.getElementById("projectDates");
+  if (!target || !projectState) return;
+  const progress = Construction.summary(projectState);
+  const parts = [];
+  if (Number.isFinite(Date.parse(projectState.startDate))) parts.push("Started: " + new Date(projectState.startDate).toLocaleDateString());
+  else if (progress.begun) parts.push("Start date not recorded for older progress");
+  if (progress.isCompleted) parts.push(Number.isFinite(Date.parse(projectState.endDate)) ? "Completed: " + new Date(projectState.endDate).toLocaleDateString() : "Completed · completion date not recorded");
+  target.textContent = parts.join(" · ") || "Not started";
 }
 
-// =========================
-// 🕒 SET PROJECT START DATE
-// =========================
-  function renderProjectDates() {
-  if (!projectState) return; // 🛑 CRITICAL GUARD
-
-  const dateEl = document.getElementById("projectDates");
-  if (!dateEl) return;
-
-  const start = projectState.startDate;
-  const end = projectState.endDate;
-
-  if (!start) {
-    dateEl.textContent = "Not started";
-    return;
-  }
-
-  const startText = new Date(start).toLocaleDateString();
-
-  if (end) {
-    const endText = new Date(end).toLocaleDateString();
-    dateEl.textContent = `Started: ${startText} • Completed: ${endText}`;
-  } else {
-    dateEl.textContent = `Started: ${startText}`;
-  }
+function startTask(stageId, taskId, options = {}) {
+  return requestTaskTransition(stageId, taskId, "active", options);
 }
-
-// ===============================
-// START TASK (CONTROLLED)
-// ===============================
-function startTask(stageId, taskId) {
-   console.log("START TASK CLICKED", stageId, taskId);
-  if (!projectState) return;
-
-  // 🆕 SET START DATE (ONLY ON FIRST ACTION)
-  if (!projectState?.startDate) {
-    projectState.startDate = new Date().toISOString();
-  }
-
-  const stage = projectState.stages.find(s => s.id === stageId);
-  if (!stage) return;
-
-  const task = stage.tasks.find(t => t.id === taskId);
-  if (!task) return;
-
-  task.status = "active";
-  task.progress = 0;
-
-  saveProjectState();
-  refreshUI();
-}
-
-// ===============================
-// HELPERS
-// ===============================
 
 function getCurrentStage(state) {
   if (!state || !state.stages) return null;
@@ -814,142 +803,98 @@ function showAlert(message, onClose, type = "warning") {
 // OPEN TASK MODAL
 // ===============================
 function openTaskModal(stageId, taskId) {
+  if (taskUpdateBusy) { ConstructionUI.message("Please finish the current task update before opening another task."); return; }
+  const existingModal = document.getElementById("taskModal");
+  if (existingModal && !existingModal.classList.contains("hidden") && window.ConstructionPlan && !ConstructionPlan.confirmTaskDiscard()) return;
+  const reference = (() => { try { return Construction.locate(projectState, stageId, taskId); } catch (error) { ConstructionUI.message(error.message); return null; } })();
+  if (!reference) return;
+  window.TaskNavigation?.remember(stageId, taskId);
+  window.ContractorSupport?.workspace();
+  currentTaskContext.projectId = projectState.id;
+  currentTaskContext.updatedAt = reference.task.updatedAt;
   currentTaskContext.stageId = stageId;
   currentTaskContext.taskId = taskId;
+  currentTaskContext.submissionId = Financials.id();
 
   // 🧠 GET CURRENT TASK
   const stage = projectState?.stages?.find(s => s.id === stageId);
   const task = stage?.tasks?.find(t => t.id === taskId);
+  document.getElementById("taskCostInput").value = "";
+  document.getElementById("taskNotesInput").value = typeof task.notes === "string" ? task.notes : "";
+  document.getElementById("taskImageInput").value = "";
+  document.getElementById("confirmTaskBtn").hidden = task.status === "completed";
+  document.getElementById("taskDetailStatus").textContent = Construction.LABELS[task.status] || "Older status preserved";
+  ConstructionUI.evidenceList(projectState, stageId, task);
+  document.getElementById("taskExpenseDescription").value = `${task?.name || "Task"} expense`;
+  document.getElementById("taskExpenseDate").value = Financials.today();
+  document.getElementById("taskExpenseCategory").value = "Materials";
+  document.getElementById("taskExpenseError").textContent = "";
 
   // 🧠 UPDATE MODAL TEXT
   const uploadLabel = document.getElementById("uploadLabel");
   const title = document.getElementById("taskModalTitle");
 
   if (uploadLabel && task) {
-    uploadLabel.textContent = `Upload ${task.name} image`;
+    uploadLabel.textContent = "Upload photos or files";
   }
 
   if (title && task) {
-    title.textContent = `Complete ${task.name}`;
+    title.textContent = `Task details: ${task.name}`;
   }
 
   // 🚀 OPEN MODAL (AFTER updating content)
+  window.ConstructionPlan?.taskDetails(stage, task);
   const modal = document.getElementById("taskModal");
   if (modal) {
+    currentTaskContext.returnFocus = document.activeElement;
+    document.body.appendChild(modal);
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "taskModalTitle");
+    if (modal.classList.contains("hidden")) modal.dataset.previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     modal.classList.remove("hidden");
+    modal.querySelector(".task-dialog-body")?.scrollTo(0, 0);
+    document.getElementById("taskModalTitle").focus();
+    modal.onkeydown = event => {
+      if (event.key === "Escape") closeTaskModal();
+      if (event.key !== "Tab") return;
+      const controls = [...modal.querySelectorAll("a[href],input,textarea,select,button,summary")].filter(control => !control.disabled && control.getClientRects().length);
+      const first = controls[0], last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
   }
 }
 
 // ===============================
 // CLOSE TASK MODAL
 // ===============================
-function closeTaskModal() {
+function closeTaskModal(options = {}) {
+  if (taskUpdateBusy) { ConstructionUI.message("Saving task details. Please wait."); return; }
+  if (!options.saved && window.ConstructionPlan && !ConstructionPlan.confirmTaskDiscard()) return false;
+  ConstructionUI.releaseEvidenceUrls();
   const modal = document.getElementById("taskModal");
   if (modal) {
     modal.classList.add("hidden");
+    document.body.style.overflow = modal.dataset.previousOverflow || "";
   }
 
   // reset inputs
   document.getElementById("taskCostInput").value = "";
   document.getElementById("taskNotesInput").value = "";
   document.getElementById("taskImageInput").value = "";
+  currentTaskContext.returnFocus?.focus();
+  return true;
 }
 
 // ==========================
 // TASK COMPLETION
 // ==========================
 function handleTaskCompletion() {
-
-  console.log("CONFIRM CLICKED");
-
-  // ===========================
-  // GET CURRENT STAGE
-  // ===========================
-  const stage = projectState.stages.find(
-    s => s.id === projectState.currentStage
-  );
-  if (!stage) return;
-
-  // ===========================
-  // GET ACTIVE TASK
-  // ===========================
-  const task = stage.tasks.find(
-    t => t.status === "active"
-  );
-  if (!task) return;
-
-  // ===========================
-  // MARK TASK COMPLETE
-  // ===========================
-  task.status = "completed";
-
-  // =========================
-  // CHECK IF STAGE IS COMPLETE
-  // =========================
-  const allCompleted = stage.tasks.every(t => t.status === "completed");
-
-  if (allCompleted) {
-    console.log("🎉 Stage fully completed");
-
-    const currentIndex = projectState.stages.findIndex(
-      s => s.id === projectState.currentStage
-    );
-
-    const nextStage = projectState.stages[currentIndex + 1];
-
-    if (nextStage) {
-      console.log("➡️ Moving to next stage:", nextStage.id);
-      projectState.currentStage = nextStage.id;
-    } else {
-      console.log("🏁 Project fully completed");
-      projectState.isCompleted = true;
-    }
-  }
-
-  // ===========================
-  // GET NEXT TASK
-  // ===========================
-  const nextTask = stage.tasks.find(t => t.status !== "completed");
-
-  // ===========================
-  // CONTRACTOR ALERT
-  // ===========================
-  if (nextTask && nextTask.requiredContractor) {
-
-    const role = nextTask.requiredContractor;
-
-    alert(`You've moved to "${nextTask.name}".\n\nYou need a ${role} to continue.`);
-
-    window.location.href = "contractors.html";
-  }
-
-  // ===========================
-  // SAVE ACTUAL COST
-  // ===========================
-  const costInput = document.getElementById("actualCost");
-  if (costInput) {
-    const cost = parseFloat(costInput.value) || 0;
-    projectState.spent = (projectState.spent || 0) + cost;
-  }
-
-  // ===========================
-  // CLOSE MODAL
-  // ===========================
-  closeTaskModal();
-
-  // ===========================
-  // SAVE + REFRESH UI
-  // ===========================
-  saveProjectState();
-
-  if (!nextTask || !nextTask.requiredContractor) {
-    refreshUI();
-  }
+  return recordTaskCompletion();
 }
 
-// ===========================
-// 🔄 GLOBAL UI REFRESH
-// ===========================
 function refreshUI() {
   updateDashboardUI();        // index page
   renderTaskListUI();         // task list
@@ -959,540 +904,29 @@ function refreshUI() {
   renderCurrentActionButton();
   renderCurrentActionCard();
   renderTaskIntelligence();
+  renderProjectDates();
+  const notice = document.getElementById("workspaceLegacyFinancials");
+  if (notice) {
+    notice.textContent = legacyFinancialNotice(projectState);
+    notice.hidden = !notice.textContent;
+  }
+  window.ProjectExperience?.refresh();
+  window.ConstructionPlan?.refresh();
 }
 
 // ===========================
 // CURRENT ACTION BUTTON
 // ===========================
-function renderCurrentActionButton() {
-  const container = document.getElementById("currentActionButton");
-  if (!container || !projectState) return;
+function renderCurrentActionButton() { ConstructionUI.currentButton(); }
 
-  container.innerHTML = "";
+function renderCurrentActionCard() { ConstructionUI.currentCard(); window.ConstructionPlan?.refresh(); }
 
-  const stage = projectState.stages.find(
-    s => s.id === projectState.currentStage
-  );
-  if (!stage) return;
+function renderTaskListUI() { ConstructionUI.tasks(); }
 
-  const task = stage.tasks.find(t => t.status !== "completed");
+function renderStageTracker() { ConstructionUI.tracker(); }
 
-  console.log("🎯 BUTTON TASK:", task);
+function getStageProgress(stage) { return Construction.stageSummary(stage).percent; }
 
-  // =========================
-  // ✅ NO TASK → STAGE COMPLETE UI
-  // =========================
-  if (!task) {
-    const msg = document.createElement("div");
-    msg.className = "stage-complete-message";
-    msg.textContent = "🎉 Stage completed";
-
-    container.appendChild(msg);
-    return;
-  }
-
-  // =========================
-  // ✅ NORMAL BUTTON FLOW
-  // =========================
-  const btn = document.createElement("button");
-  btn.className = "btn-primary-full"; // 👈 CLEAN
-
-  if (!task.status || task.status === "pending") {
-    btn.textContent = "Start Task";
-
-    btn.onclick = () => {
-      task.status = "active";
-      saveProjectState();
-      refreshUI();
-    };
-  }
-
-  else if (task.status === "active") {
-    btn.textContent = "Continue";
-
-    btn.onclick = () => {
-      openTaskModal(stage.id, task.id);
-    };
-  }
-
-  container.appendChild(btn);
-}
-
-// =======================
-// CURRENT ACTION CARD
-// =======================
-function renderCurrentActionCard() {
-  if (!projectState) return;
-
-  // 🔍 DEBUG POINT 1 (TOP LEVEL STATE)
-  console.log("PROJECT STATE:", projectState);
-  console.log("CURRENT STAGE:", projectState.currentStage);
-  console.log("STAGES:", projectState.stages);
-
-  const stage = projectState.stages.find(
-    s => s.id === projectState.currentStage
-  );
-
-  // 🔍 DEBUG POINT 2 (STAGE RESOLUTION)
-  console.log("FOUND STAGE:", stage);
-
-  if (!stage) return;
-
-  const nextTask = stage.tasks.find(
-    t => t.status === "pending" || t.status === "active"
-  );
-
-  // =========================
-  // 🧱 FALLBACK UI (CRITICAL FIX)
-  // =========================
-  if (!nextTask) {
-
-    const stageEl = document.querySelector(".action-stage");
-    const taskEl = document.querySelector(".action-task");
-    const insightList = document.querySelector(".insight-list");
-    const costEl = document.querySelector(".action-cost");
-
-    if (stageEl) stageEl.textContent = `${capitalize(stage.name)} • 100%`;
-    if (taskEl) taskEl.textContent = "No active task";
-
-    if (insightList) {
-      insightList.innerHTML = `
-        <li>🎉 All tasks in this stage are completed</li>
-        <li>➡️ Preparing next stage...</li>
-      `;
-    }
-
-    if (costEl) {
-      costEl.textContent = "";
-    }
-
-    return; // 👈 keep return AFTER rendering fallback
-  }
-
-  // =========================
-  // 🎯 UPDATE STAGE + TASK
-  // =========================
-  const stageEl = document.querySelector(".action-stage");
-  const taskEl = document.querySelector(".action-task");
-
-  const progress = getStageProgress(stage);
-  if (stageEl) stageEl.textContent = `${capitalize(stage.name)} • ${progress}%`;
-  if (taskEl) taskEl.textContent = nextTask.name;
-
-  // =========================
-  // 🧠 UPDATE INSIGHTS (DYNAMIC)
-  // =========================
-  const insightList = document.querySelector(".insight-list");
-
-  if (insightList) {
-    insightList.innerHTML = "";
-
-    const insights = generateTaskInsights(nextTask, projectState);
-
-    insights.forEach(insight => {
-      if (insight.type === "action") return;
-
-      const li = document.createElement("li");
-
-      if (insight.type === "critical") {
-        li.textContent = "⚠️ " + insight.message;
-      } else {
-        li.textContent = insight.message;
-      }
-
-      insightList.appendChild(li);
-    });
-  }
-
-  // =========================
-  // 💰 UPDATE COST
-  // =========================
-  const costEl = document.querySelector(".action-cost");
-
-  if (costEl) {
-    const cost = nextTask.estimatedCost || 0;
-    costEl.textContent = `Estimated: ₵${cost.toLocaleString()}`;
-  }
-}
-
-// ===============================
-// TASK LIST UI
-// ===============================
-function renderTaskListUI() {
-
-  const taskListEl = document.getElementById("taskList");
-  if (!taskListEl) return;
-
-  taskListEl.innerHTML = "";
-
-  const stages = projectState.stages;
-
-  stages.forEach(stage => {
-    // =========================
-    // 💰 STAGE FINANCIALS (NEW)
-    // =========================
-    let stageEstimated = 0;
-    let stageActual = 0;
-
-    stage.tasks.forEach(task => {
-      stageEstimated += task.estimatedCost || 0;
-      stageActual += task.actualCost || 0;
-    });
-
-    const prediction = generateStagePrediction(stage);
-    const stageVariance = stageActual - stageEstimated;
-    const stageVariancePercent = stageEstimated > 0
-      ? ((stageVariance / stageEstimated) * 100).toFixed(1)
-      : 0;
-
-    const isOverBudget = stageVariance > 0;
-    const card = document.createElement("div");
-    card.className = "stage-card";
-
-    const isCompleted = stage.tasks.every(t => t.status === "completed");
-    const isCurrent = projectState.currentStage === stage.id;
-
-    let stageStatus = "Locked";
-    if (isCompleted) stageStatus = "Completed";
-    else if (isCurrent) stageStatus = "In Progress";
-
-    // =========================
-    // HEADER
-    // =========================
-    const header = document.createElement("div");
-    header.className = "stage-card-header";
-    header.style.cursor = "pointer";
-
-    header.innerHTML = `
-      <div class="stage-header-top">
-        <h3>${stage.name}</h3>
-        <span class="stage-status">${stageStatus}</span>
-      </div>
-
-      <div class="stage-financial">
-        ₵${stageActual.toLocaleString()} 
-        <span class="stage-sub">
-          / ₵${stageEstimated.toLocaleString()}
-        </span>
-        <span class="stage-variance ${isOverBudget ? "over" : "under"}">
-          ${isOverBudget ? "+" : ""}₵${stageVariance.toLocaleString()} (${stageVariancePercent}%)
-        </span>
-      </div>
-    `;
-
-    header.onclick = () => {
-      expandedStages[stage.id] = !expandedStages[stage.id];
-      renderTaskListUI();
-    };
-
-    card.appendChild(header);
-
-    if (prediction) {
-
-      const isRisk = prediction.isOver;
-
-      const forecast = document.createElement("div");
-      forecast.className = `stage-prediction ${isRisk ? "risk" : "safe"}`;
-
-      const trendIcon = isRisk ? "↑" : "↓";
-
-      forecast.innerHTML = isRisk
-        ? `⚠️ Projected Overrun ${trendIcon} ₵${prediction.variance.toLocaleString()} (${prediction.variancePercent}%)`
-        : `✅ Projected Within Budget ${trendIcon}`;
-
-      const note = document.createElement("div");
-      note.className = "stage-note";
-
-      note.textContent = isRisk
-        ? "Upcoming tasks are likely to increase total cost"
-        : "Current spending trend is stable";
-
-      card.appendChild(forecast);
-      card.appendChild(note);
-    }
-
-    // =========================
-    // BODY
-    // =========================
-    const body = document.createElement("div");
-    body.className = "stage-card-body";
-
-    // =========================
-    // COMPLETED STAGE
-    // =========================
-    if (isCompleted) {
-
-    if (expandedStages[stage.id]) {
-
-      stage.tasks.forEach(task => {
-        const item = document.createElement("div");
-        item.className = "task-item completed";
-
-        const estimated = task.estimatedCost || 0;
-        const actual = task.actualCost || 0;
-
-        const variance = actual - estimated;
-        const variancePercent = estimated > 0
-          ? ((variance / estimated) * 100).toFixed(1)
-          : 0;
-
-        const isOver = variance > 0;
-
-        item.innerHTML = `
-          ✔ ${task.name} — ₵${actual.toLocaleString()}
-          <div class="task-sub">
-            Est: ₵${estimated.toLocaleString()}
-          </div>
-          <div class="task-variance ${isOver ? "over" : "under"}">
-            ${isOver ? "+" : ""}₵${variance.toLocaleString()} (${variancePercent}%)
-          </div>
-        `;
-
-        body.appendChild(item);
-      });
-    }
-
-}
-
-    // =========================
-    // CURRENT STAGE
-    // =========================
-    else if (isCurrent) {
-
-      const nextTask = stage.tasks.find(t => t.status !== "completed");
-      const completedTasks = stage.tasks.filter(t => t.status === "completed");
-      const pendingTasks = stage.tasks.filter(t => t.status === "pending");
-
-      // COMPLETED (TOGGLED BY HEADER)
-      if (completedTasks.length > 0 && expandedStages[stage.id]) {
-
-        completedTasks.forEach(task => {
-          const item = document.createElement("div");
-          item.className = "task-item completed";
-
-          const estimated = task.estimatedCost || 0;
-          const actual = task.actualCost || 0;
-
-          const variance = actual - estimated;
-          const variancePercent = estimated > 0
-            ? ((variance / estimated) * 100).toFixed(1)
-            : 0;
-
-          const isOver = variance > 0;
-
-          item.innerHTML = `
-            ✔ ${task.name} — ₵${actual.toLocaleString()}
-            <div class="task-sub">
-              Est: ₵${estimated.toLocaleString()}
-            </div>
-            <div class="task-variance ${isOver ? "over" : "under"}">
-              ${isOver ? "+" : ""}₵${variance.toLocaleString()} (${variancePercent}%)
-            </div>
-          `;
-
-          body.appendChild(item);
-        });
-
-      }
-
-      // CURRENT TASK
-      if (nextTask) {
-
-        const item = document.createElement("div");
-        item.className = "task-item active-task";
-
-        const label = document.createElement("span");
-
-        // =========================
-        // 💰 TASK COST UI (CURRENT TASK)
-        // =========================
-        const costEl = document.createElement("div");
-        costEl.className = "task-cost";
-
-        const estimated = nextTask.estimatedCost || 0;
-        const actual = nextTask.actualCost || 0;
-
-        if (nextTask.status === "completed") {
-          costEl.textContent = `Estimated: ₵${estimated.toLocaleString()} • Actual: ₵${actual.toLocaleString()}`;
-        } else {
-          costEl.textContent = `Estimated: ₵${estimated.toLocaleString()}`;
-        }
-
-        // 🧠 FORCE TEST (IMPORTANT)
-        console.log("INTELLIGENCE TEST:", nextTask);
-
-        // 🧠 GENERATE INSIGHTS
-        const insights = generateTaskInsights(nextTask, projectState);
-        console.log("INSIGHTS RESULT:", insights);
-
-        const insightsEl = renderTaskInsights(insights);
-
-        if (nextTask.status === "active") {
-          label.textContent = nextTask.name;
-
-          const btn = document.createElement("button");
-          btn.className = "task-btn primary";
-          btn.textContent = "Mark as Completed";
-
-          btn.onclick = () => {
-            openTaskModal(stage.id, nextTask.id);
-          };
-
-          item.appendChild(label);
-          item.appendChild(costEl);
-          item.appendChild(btn);
-
-          // 🧠 ATTACH INSIGHTS
-        if (insightsEl) {
-          item.appendChild(insightsEl);
-        }
-
-        } else {
-          label.textContent = nextTask.name;
-
-          item.appendChild(label);
-          item.appendChild(costEl);
-        }
-
-        if (insightsEl) {
-          item.appendChild(insightsEl);
-        }
-        body.appendChild(item);
-      }
-
-      // LOCKED TASKS
-      pendingTasks.forEach(task => {
-        if (nextTask && task.id === nextTask.id) return;
-
-        const item = document.createElement("div");
-        item.className = "task-item locked";
-        item.textContent = `${task.name} — Locked`;
-
-        body.appendChild(item);
-      });
-
-    }
-
-    // =========================
-    // LOCKED STAGE
-    // =========================
-    else {
-
-      const msg = document.createElement("div");
-      msg.className = "locked-msg";
-      msg.textContent = "Complete previous stage to unlock";
-
-      body.appendChild(msg);
-    }
-
-    // =========================
-    // FINAL ATTACH
-    // =========================
-    card.appendChild(body);
-    taskListEl.appendChild(card);
-
-  });
-
-}
-
-  // =========================
-  // 🎉 PROJECT COMPLETION MESSAGE
-  // =========================
-  const allStagesCompleted =
-    projectState &&
-    projectState.completedStages &&
-    projectState.completedStages.length === projectState.stages.length;
-
-  if (allStagesCompleted) {
-    const finalMsg = document.createElement("div");
-    finalMsg.className = "project-complete-msg";
-    finalMsg.innerHTML = `
-    <h3>🎉 Project Completed</h3>
-    <p>Your building project has been successfully completed.</p>
-
-    <div style="margin-top:10px;">
-      <button class="primary-btn" onclick="goTo('projects.html')">View All Projects</button>
-      <button class="secondary-btn" onclick="resetProject()">Start New Project</button>
-    </div>
-  `;
-
-    taskListEl.appendChild(finalMsg);
-}
-
-// =========================
-// STAGE TRACKER
-// =========================
-function renderStageTracker() {
-  const container = document.getElementById("stageTracker");
-  if (!container || !projectState) return;
-
-    container.innerHTML = "";
-
-  const stages = projectState.stages;
-  const currentStage = projectState.currentStage;
-  const completedStages = projectState.completedStages || [];
-
-  // =========================
-  // BUILD STAGE PILLS
-  // =========================
-  stages.forEach(stage => {
-    const step = document.createElement("div");
-    step.className = "stage-step";
-
-    // =========================
-    // STATE LOGIC
-    // =========================
-    if (completedStages.includes(stage.id)) {
-      step.classList.add("completed");
-      step.textContent = stage.name + " ✓";
-    }
-    else if (stage.id === currentStage) {
-      step.classList.add("active");
-      step.textContent = stage.name + " ⚡";
-    }
-    else {
-      step.classList.add("locked");
-      step.textContent = stage.name + " 🔒";
-    }
-
-    container.appendChild(step);
-  });
-
-  // =========================
-  // META TEXT (CURRENT STAGE PROGRESS)
-  // =========================
-  const metaEl = document.getElementById("stageMeta");
-
-  if (metaEl) {
-    const stageObj = stages.find(s => s.id === currentStage);
-
-    if (stageObj) {
-      const total = stageObj.tasks.length;
-      const completed = stageObj.tasks.filter(t => t.status === "completed").length;
-
-      metaEl.textContent = `${stageObj.name} • ${completed} of ${total} tasks completed`;
-    }
-  }
-}
-
-// =========================
-// HELPER FUNCTIONS
-// =========================
-
-function getStageProgress(stage) {
-  if (!stage || !stage.tasks) return 0;
-
-  const total = stage.tasks.length;
-  const completed = stage.tasks.filter(t => t.status === "completed").length;
-
-  if (total === 0) return 0;
-
-  return Math.round((completed / total) * 100);
-}
-
-// ===============================
-// 🧠 ROLE RESOLVER (MASTER FIX)
-// ===============================
 function resolveRole(role) {
   if (!role) return "";
 
@@ -1539,64 +973,17 @@ function setText(id, value, html = false) {
 // DATA HELPERS
 // ===============================
 function extractContractorData(card) {
-  return {
-    name: card.dataset.name,
-    role: card.dataset.role,
-    rating: card.dataset.rating,
-    reviews: card.dataset.reviews,
-    location: card.dataset.location,
-    image: card.dataset.image,
-    experience: card.dataset.experience,
-    projects: card.dataset.projects,
-    about: card.dataset.about,
-    projectList: card.dataset.projectlist,
-    skills: card.dataset.skills,
-    certs: card.dataset.certs
-  };
+  if (window.ContractorModel) return ContractorModel.extract(card);
+  return { name:card.dataset.name, role:card.dataset.role, location:card.dataset.location, image:card.dataset.image,
+    rating:card.dataset.rating, reviews:card.dataset.reviews, experience:card.dataset.experience, projects:card.dataset.projects,
+    about:card.dataset.about, skills:card.dataset.skills, certs:card.dataset.certs, projectList:card.dataset.projectlist };
 }
 
-// ===============================
-// PROJECT FINANCIAL HELPERS
-// ===============================
 function calculateProjectFinancials(state) {
-  if (!state) return { budget: 0, spent: 0, variance: 0 };
-
-  const budget = state.estimate?.totalCost || state.budget || 0;
-  const spent = state.spent || 0;
-
-  const variance = budget > 0
-    ? ((spent - budget) / budget) * 100
-    : 0;
-
-  return {
-    budget,
-    spent,
-    variance
-  };
+  return state ? Financials.calculate(state) : { available: true, budget: 0, spent: 0, remaining: 0, variance: 0, stages: {}, tasks: {} };
 }
 
-// ===============================
-// PROJECT PROGRESS HELPER
-// ===============================
-function calculateProjectProgress(project) {
-  if (!project || !project.stages) return 0;
-
-  let totalTasks = 0;
-  let completedTasks = 0;
-
-  project.stages.forEach(stage => {
-    stage.tasks.forEach(task => {
-      totalTasks++;
-      if (task.status === "completed") {
-        completedTasks++;
-      }
-    });
-  });
-
-  if (totalTasks === 0) return 0;
-
-  return Math.round((completedTasks / totalTasks) * 100);
-}
+function calculateProjectProgress(project) { return Construction.summary(project).percent; }
 
 // ===============================
 // 🧠 INTELLIGENCE MAP (CENTRALIZED)
@@ -1827,6 +1214,8 @@ const INTELLIGENCE_MAP = {
 // ===============================
 // TASK INTELLIGENCE ENGINE (ADVISOR SYSTEM)
 // ===============================
+
+
 function generateTaskInsights(task, projectState) {
   // 🛑 GUARD: No task (happens after project completion)
   if (!task) {
@@ -1834,7 +1223,7 @@ function generateTaskInsights(task, projectState) {
     return [];
   }
 
-  const stageId = projectState?.currentStage;
+  const stageId = projectState?.stages?.find(stage => stage.tasks.some(item => item.id === task.id))?.id;
   const hiredType = projectState?.hiredContractor?.type;
 
   let insights = [];
@@ -1908,95 +1297,13 @@ function generateTaskInsights(task, projectState) {
 // 🔮 PREDICTIVE INTELLIGENCE
 // ===============================
 function generatePrediction(projectState) {
-  if (!projectState || !projectState.stages) return null;
-
-  let totalEstimated = projectState.estimate?.totalCost || 0;
-  let totalActual = 0;
-  let completedTasks = 0;
-  let remainingTasks = 0;
-
-  projectState.stages.forEach(stage => {
-    stage.tasks.forEach(task => {
-      const est = task.estimatedCost || 0;
-      const act = task.actualCost || 0;
-
-      if (task.status === "completed") {
-        totalActual += act;
-        completedTasks++;
-      } else {
-        remainingTasks++;
-      }
-    });
-  });
-
-  if (completedTasks === 0) return null;
-
-  const avgCost = totalActual / completedTasks;
-  const projectedRemaining = avgCost * remainingTasks;
-  const projectedTotal = totalActual + projectedRemaining;
-
-  const variance = projectedTotal - totalEstimated;
-  const variancePercent = totalEstimated > 0
-    ? ((variance / totalEstimated) * 100).toFixed(1)
-    : 0;
-
-  return {
-    projectedTotal,
-    variance,
-    variancePercent,
-    isOver: variance > 0
-  };
+  return projectState ? Financials.forecast(projectState) : null;
 }
 
-// ===============================
-// 🔮 STAGE-LEVEL PREDICTION
-// ===============================
 function generateStagePrediction(stage) {
-  if (!stage || !stage.tasks) return null;
-
-  let estimated = 0;
-  let actual = 0;
-  let completed = 0;
-  let remaining = 0;
-
-  stage.tasks.forEach(task => {
-    const est = task.estimatedCost || 0;
-    const act = task.actualCost || 0;
-
-    estimated += est;
-
-    if (task.status === "completed") {
-      actual += act;
-      completed++;
-    } else {
-      remaining++;
-    }
-  });
-
-  if (completed === 0) return null;
-
-  const avg = actual / completed;
-  const projectedRemaining = avg * remaining;
-  const projectedTotal = actual + projectedRemaining;
-
-  const variance = projectedTotal - estimated;
-  const variancePercent = estimated > 0
-    ? ((variance / estimated) * 100).toFixed(1)
-    : 0;
-
-  return {
-    estimated,
-    actual,
-    projectedTotal,
-    variance,
-    variancePercent,
-    isOver: variance > 0
-  };
+  return projectState && stage ? Financials.forecast(projectState, stage.id) : null;
 }
 
-// ===============================
-// RENDER TASK INSIGHTS (STRUCTURED)
-// ===============================
 function renderTaskInsights(insights) {
   if (!insights || insights.length === 0) return null;
 
@@ -2036,12 +1343,13 @@ function renderTaskInsights(insights) {
 // SAVE SYSTEM
 // ===============================
 function toggleSave(contractor) {
-  let saved = AppState.savedContractors;
+  let saved = JSON.parse(localStorage.getItem('savedContractors') || '[]');
 
-  const exists = saved.find(c => c.name === contractor.name);
+  const same = c => window.ContractorModel ? ContractorModel.identity(c) === ContractorModel.identity(contractor) : c.name === contractor.name;
+  const exists = saved.find(same);
 
   if (exists) {
-    saved = saved.filter(c => c.name !== contractor.name);
+    saved = saved.filter(c => !same(c));
   } else {
     saved.push(contractor);
   }
@@ -2129,7 +1437,7 @@ function updateStage(selector, value) {
   const el = document.querySelector(selector);
 
   if (el) {
-    el.textContent = "₵" + Math.round(value).toLocaleString();
+    el.textContent = Financials.format(value);
   }
 }
 
@@ -2146,8 +1454,10 @@ function generateProjectInsights(projectState) {
   };
 
   if (!projectState) return insights;
+  const financials = Financials.calculate(projectState);
+  if (!financials.available) return [{ type: "critical", message: financials.error }];
 
-  const stageId = projectState.currentStage;
+  const stageId = Construction.nextTask(projectState)?.stage.id;
   const stageObj = projectState.stages.find(s => s.id === stageId);
   const tasks = stageObj?.tasks || [];
 
@@ -2182,7 +1492,7 @@ function generateProjectInsights(projectState) {
   // 💰 BUDGET INTELLIGENCE
   // =========================
   const budget = projectState.estimate?.totalCost || projectState.budget || 0;
-  const spent = projectState.spent || 0;
+  const spent = Financials.calculate(projectState).spent;
 
   if (budget > 0) {
     const usage = (spent / budget) * 100;
@@ -2191,13 +1501,13 @@ function generateProjectInsights(projectState) {
     if (usage > 100) {
       insights.critical.push({
         type: "critical",
-        message: `Project is over budget by ₵${Math.abs(remaining).toLocaleString()}`
+        message: `Project is over budget by GH₵${Math.abs(remaining).toLocaleString()}`
       });
     } 
     else if (usage > 85) {
       insights.warning.push({
         type: "warning",
-        message: `Budget risk: ${Math.round(usage)}% used. Only ₵${remaining.toLocaleString()} remaining`
+        message: `Budget risk: ${Math.round(usage)}% used. Only ${Financials.format(remaining)} remaining`
       });
     } 
     else if (usage > 60) {
@@ -2209,7 +1519,7 @@ function generateProjectInsights(projectState) {
     else {
       insights.success.push({
         type: "success",
-        message: `Budget healthy. ₵${remaining.toLocaleString()} remaining`
+        message: `Budget healthy. ${Financials.format(remaining)} remaining`
       });
     }
   }
@@ -2240,7 +1550,7 @@ function generateProjectInsights(projectState) {
     if (!hired) {
       insights.critical.push({
         type: "critical",
-        message: `Hire a ${nextTask.requiredContractor} to proceed`
+        message: `Optional support: consult a ${nextTask.requiredContractor} if needed. You can record progress independently.`
       });
     } else if (nextTask.status !== "active") {
       insights.suggestion.push({
@@ -2310,10 +1620,11 @@ function generateRecommendations(state) {
 
   if (!state) return actions;
 
-  const stage = state.stages.find(s => s.id === state.currentStage);
+  const focus = Construction.nextTask(state);
+  const stage = focus?.stage;
   const tasks = stage?.tasks || [];
 
-  const nextTask = tasks.find(t => t.status !== "completed");
+  const nextTask = focus?.task;
   const required = resolveRole(nextTask?.requiredContractor);
   console.log("🔍 REQUIRED:", required);
   console.log("🔍 HIRED MAP:", projectState.hiredContractor);
@@ -2321,7 +1632,7 @@ function generateRecommendations(state) {
   const hired = projectState.hiredContractor;
 
   const budget = state.estimate?.totalCost || 0;
-  const spent = state.spent || 0;
+  const spent = Financials.calculate(state).spent;
 
   // =========================
   // 1. 🚨 NO CONTRACTOR
@@ -2329,13 +1640,13 @@ function generateRecommendations(state) {
   if (!hired && nextTask) {
     actions.push({
       type: "critical",
-      message: `Hire a ${nextTask.requiredContractor} to proceed`,
+      message: `Optional support: consult a ${nextTask.requiredContractor} if needed. You can record progress independently.`,
       action: () => {
 
       const role = nextTask.requiredContractor;
 
       // Persist
-      localStorage.setItem("projectState", JSON.stringify(state));
+      saveProjectState();
 
       // Refresh UI
       refreshUI?.();
@@ -2345,7 +1656,7 @@ function generateRecommendations(state) {
     }
     });
 
-    return actions; // highest priority → stop here
+    // Contractor discovery is optional; task actions remain available below.
   }
 
   // =========================
@@ -2423,7 +1734,7 @@ function generateRecommendations(state) {
     if (insight.type === "action") {
       actions.push({
         type: "suggestion",
-        message: insight.message,
+        message: insight.message.replace(/^Hire /, "Optional support: consult "),
         action: () => goTo("contractors.html") // 🔧 we’ll refine later
       });
     }
@@ -2438,7 +1749,7 @@ function renderProjectInsights() {
   const insightList = document.getElementById("projectInsightList");
   if (!insightList) return;
 
-  const insights = generateProjectInsights(projectState);
+  const insights = generateProjectInsights(projectState).filter(item => !/contractor|hired|overqualified/i.test(item.message));
 
   if (insights.length === 0) {
     insightList.innerHTML = "<li>No updates yet</li>";
@@ -2457,101 +1768,10 @@ function renderProjectInsights() {
 // RENDER RECOMMENDATIONS
 // ===============================
 function renderRecommendations() {
-
-  const container = document.getElementById("recommendationList");
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  // =========================
-  // DATA
-  // =========================
-  const prediction = generatePrediction(projectState);
-  const actions = generateRecommendations(projectState);
-
-  // =========================
-  // MAIN PANEL
-  // =========================
-  const panel = document.createElement("div");
-  panel.className = "intelligence-panel";
-
-  // =========================
-  // STATUS BLOCK
-  // =========================
-  const statusBlock = document.createElement("div");
-  statusBlock.className = "intel-block";
-
-  if (prediction) {
-
-  const variance = prediction.variance || 0;
-  const percent = prediction.variancePercent || 0;
-
-  if (prediction.isOver) {
-    statusBlock.innerHTML = `
-      <h4>⚠️ Budget Status</h4>
-      <p>Projected over budget by <strong>₵${variance.toLocaleString()}</strong> (${percent}%)</p>
-    `;
-  } else {
-    statusBlock.innerHTML = `
-      <h4>✅ Budget Status</h4>
-      <p>Projected within budget</p>
-    `;
-  }
-
-} else {
-  statusBlock.innerHTML = `
-    <h4>📊 Budget Status</h4>
-    <p>No data yet</p>
-  `;
+  document.getElementById('recommendationList')?.replaceChildren();
+  window.ContractorSupport?.workspace();
 }
 
-  // =========================
-  // RECOMMENDATION BLOCK
-  // =========================
-  const recBlock = document.createElement("div");
-  recBlock.className = "intel-block";
-
-  if (!actions || actions.length === 0) {
-    recBlock.innerHTML = `
-      <h4>💡 Recommendations</h4>
-      <p>✅ No actions needed</p>
-    `;
-  } else {
-    recBlock.innerHTML = `
-      <h4>💡 Recommendations</h4>
-      <ul>
-        ${actions.map(a => `<li>${a.message}</li>`).join("")}
-      </ul>
-    `;
-  }
-
-  // =========================
-  // OPTIONAL: CLICKABLE ACTIONS
-  // =========================
-  if (actions && actions.length > 0) {
-    setTimeout(() => {
-      const items = panel.querySelectorAll("li");
-      items.forEach((el, i) => {
-        if (actions[i].action) {
-          el.style.cursor = "pointer";
-          el.onclick = actions[i].action;
-        }
-      });
-    }, 0);
-  }
-
-  // =========================
-  // BUILD PANEL
-  // =========================
-  panel.appendChild(statusBlock);
-  panel.appendChild(recBlock);
-
-  container.appendChild(panel);
-}
-
-// ===============================
-// CHART RENDER
-// ===============================
 function renderDashboardChart() {
   const canvas = document.getElementById("costChart");
   if (!canvas) return;
@@ -2581,317 +1801,14 @@ function renderDashboardChart() {
 // ===============================
 // CONTRACTOR LIST (SMART FILTER CLEAN)
 // ===============================
-function initContractorList() {
-  if (!window.location.pathname.includes("contractors.html")) return;
+function initContractorList() { if (location.pathname.endsWith('contractors.html')) ContractorSupport.marketplace(); }
 
-  const noContractorMessage = document.getElementById("noContractorMessage");
-  const container = document.getElementById("contractorList");
-  const cards = document.querySelectorAll(".contractor-card");
+function initContractorSearch() { /* Combined search and specialty filtering is bound by ContractorSupport.marketplace. */ }
 
-  if (!container || !cards.length) return;
+function initContractorProfile() { window.ContractorSupport?.profile(); }
 
-  // ===========================
-  // 🎯 URL ROLE
-  // ===========================
-  const params = new URLSearchParams(window.location.search);
-  const roleFromURL = params.get("role");
-  const normalizedRole = (roleFromURL || "").toLowerCase().trim();
-
-  const normalizedURLRole =
-    CONTRACTOR_ROLE_MAP[roleFromURL?.toLowerCase()]?.toLowerCase() || "";
-
-  console.log("🎯 Role from URL:", roleFromURL);
-
-  // ===========================
-  // 🎯 PROJECT CONTEXT
-  // ===========================
-  const stageId = projectState.currentStage;
-  const stage = projectState.stages.find(s => s.id === stageId);
-
-  if (!stage) return;
-
-  if (!stage.tasks || stage.tasks.length === 0) {
-    stage.tasks = generateStageTasks(stageId);
-    saveProjectState();
-  }
-
-  const nextTask = stage.tasks.find(t => t.status !== "completed");
-  if (!nextTask) return;
-
-  const requiredRoles =
-    TASK_ROLE_MAP[nextTask.id]?.map(normalizeRole) || [];
-
-  // ===========================
-  // 🎯 SCORE CONTRACTORS
-  // ===========================
-  const contractorArray = [];
-
-  cards.forEach(card => {
-    const rawRole = card.dataset?.role;
-    const role = normalizeRole(typeof rawRole === "string" ? rawRole : "");
-
-    let score = 0;
-    let result = { status: "none" };
-
-    // ✅ URL override (STRICT MATCH)
-    if (normalizedURLRole) {
-      const ROLE_ALIASES = {
-        electrician: ["electrical engineer", "electrician"],
-        mason: ["mason", "blockwork"],
-        carpenter: ["carpenter", "woodwork"],
-        plumber: ["plumber", "piping"],
-        tiler: ["tiler", "tiles", "finishing"],
-        roofer: ["roofer", "carpenter", "finishing"],
-        painter: ["painter", "finishing"],
-        surveyor: ["surveyor", "layout", "marking"],
-        excavation: ["excavation", "excavation specialist"],
-        foundation: ["foundation", "foundation specialist"],
-      };
-
-      const aliases = ROLE_ALIASES[normalizedURLRole] || [normalizedURLRole];
-
-      if (aliases.some(a => role.includes(a))) {
-        score = 3;
-        result = { status: "best" };
-      } else {
-        score = 0;
-      }
-
-    } else {
-      // ✅ KEEP your intelligence system exactly as is
-      result = evaluateContractor(role, requiredRoles);
-
-      if (result.status === "best") score = 3;
-      else if (result.status === "acceptable") score = 2;
-      else score = 0;
-    }
-
-    contractorArray.push({ card, score, result });
-  });
-
-  // ===========================
-  // 🎯 SORT
-  // ===========================
-  contractorArray.sort((a, b) => b.score - a.score);
-
-  // ===========================
-  // 🎯 RENDER
-  // ===========================
-  let visibleCount = 0;
-
-  contractorArray.forEach(({ card, score, result }) => {
-    console.log("Contractor:", card.dataset.role, "Score:", score);
-
-    card.classList.remove("best-match");
-
-    if (score === 0) {
-      card.style.display = "none";
-    } else {
-      visibleCount++;
-      card.style.display = "block";
-
-      if (result.status === "best") {
-        card.classList.add("best-match");
-      }
-    }
-
-    container.appendChild(card);
-
-    const contractorData = extractContractorData(card);
-    const trustScore = calculateTrustScore(contractorData);
-
-    const trustEl = card.querySelector(".trust-score");
-    if (trustEl) {
-      trustEl.textContent = `${trustScore}% Reliable`;
-    }
-  });
-
-  // ✅ FALLBACK (PUT IT RIGHT HERE)
-  if (visibleCount === 0 && roleFromURL) {
-    if (noContractorMessage) {
-      noContractorMessage.style.display = "block";
-    }
-
-    contractorArray.forEach(({ card }) => {
-      card.style.display = "block";
-    });
-
-  } else {
-    if (noContractorMessage) {
-      noContractorMessage.style.display = "none";
-    }
-  }
-
-
-  // ===========================
-  // 🎯 EMPTY STATE (FIXED)
-  // ===========================
-  if (noContractorMessage) {
-    if (visibleCount === 0) {
-      noContractorMessage.textContent =
-        "No matching contractors available. Try another category or add one.";
-      noContractorMessage.style.display = "block";
-    } else {
-      noContractorMessage.style.display = "none";
-    }
-  }
-
-  // ===========================
-  // 🎯 PROFILE NAVIGATION
-  // ===========================
-  document.querySelectorAll(".view-profile-btn").forEach(btn => {
-    btn.onclick = function (e) {
-      e.preventDefault();
-
-      const card = this.closest(".contractor-card");
-      const contractor = extractContractorData(card);
-
-      localStorage.setItem(
-        "selectedContractor",
-        JSON.stringify(contractor)
-      );
-
-      window.location.href = "contractor-profile.html";
-    };
-  });
-
-  // ===========================
-  // 🎯 CARD CLICK
-  // ===========================
-  cards.forEach(card => {
-    card.onclick = function (e) {
-      if (e.target.closest("button")) return;
-
-      const contractor = extractContractorData(card);
-      localStorage.setItem(
-        "selectedContractor",
-        JSON.stringify(contractor)
-      );
-
-      window.location.href = "contractor-profile.html";
-    };
-  });
-
-  // ===========================
-// 🎯 FILTER BUTTONS (UI ONLY)
-// ===========================
-const filterButtons = document.querySelectorAll(".filter-btn");
-
-  filterButtons.forEach(btn => {
-    btn.onclick = () => {
-      const selectedFilter = (btn.dataset.filter || "").toLowerCase().trim();
-
-      // Active state
-      filterButtons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      let visibleCount = 0;
-
-      cards.forEach(card => {
-        const role = String(card.dataset.role || "").toLowerCase().trim();
-
-        const match =
-          selectedFilter === "all" ||
-          role === selectedFilter ||
-          role.includes(selectedFilter);
-
-        card.style.display = match ? "block" : "none";
-
-        if (match) visibleCount++;
-      });
-
-      // ===========================
-      // 🚨 EMPTY STATE (ONLY WHEN NEEDED)
-      // ===========================
-      if (noContractorMessage) {
-        if (visibleCount === 0) {
-          // ✅ Show message
-          noContractorMessage.style.display = "block";
-
-          // ✅ Show ALL contractors (fallback)
-          cards.forEach(card => {
-            card.style.display = "block";
-          });
-
-        } else {
-          // ✅ Hide message if matches exist
-          noContractorMessage.style.display = "none";
-        }
-      }
-    };
-  });
-
-  // ✅ THIS PART GOES HERE (outside the loop)
-  const defaultFilterBtn = document.querySelector(".filter-btn.active");
-
-  if (defaultFilterBtn) {
-    defaultFilterBtn.click();
-  }
-}
-
-// ===============================
-// CONTRACTOR SEARCH (FIXED)
-// ===============================
-function initContractorSearch() {
-  const input = document.querySelector(".search-bar");
-  if (!input) return;
-
-  input.addEventListener("input", function () {
-    const query = this.value.toLowerCase();
-
-    document.querySelectorAll(".contractor-card").forEach(card => {
-      const name = (card.dataset.name || "").toLowerCase();
-      const role = (card.dataset.role || "").toLowerCase();
-      const location = (card.dataset.location || "").toLowerCase();
-
-      const match =
-        name.includes(query) ||
-        role.includes(query) ||
-        location.includes(query);
-
-      card.style.display = match ? "" : "none";
-    });
-  });
-}
-
-// ===============================
-// CONTRACTOR PROFILE
-// ===============================
-function initContractorProfile() {
-  if (!window.location.pathname.includes("contractor-profile.html")) return;
-
-  const raw = localStorage.getItem("selectedContractor");
-
-  let contractor;
-  try {
-    contractor = JSON.parse(raw);
-  } catch {
-    return;
-  }
-
-  if (!contractor) return;
-
-  setText("contractorName", contractor.name);
-  setText("contractorRole", contractor.role);
-  setText("contractorRating", `⭐ ${contractor.rating}`);
-  setText("contractorLocation", contractor.location);
-
-  const img = document.getElementById("contractorImage");
-  if (img) img.src = contractor.image;
-
-  setText("contractorExperience", contractor.experience);
-  setText("contractorProjects", contractor.projects);
-
-  const about = document.querySelector("#about p");
-  if (about) about.textContent = contractor.about;
-
-  initHireButton(contractor);
-}
-
-// ===============================
-// SAVED CONTRACTORS PAGE (RESTORED)
-// ===============================
 function initSavedPage() {
+  if (window.ContractorSupport?.saved) return ContractorSupport.saved();
 
   const container = document.getElementById("savedList");
   const emptyState = document.getElementById("emptyState");
@@ -2998,38 +1915,20 @@ function initSavedPage() {
 // ===============================
 // HIRE CONTRACTOR (FIXED)
 // ===============================
-function initHireButton(contractor) {
-  const btn = document.getElementById("hireContractorBtn");
-  if (!btn) return;
+function initHireButton(contractor) { window.ContractorSupport?.profile(); }
 
-  btn.onclick = () => {
-
-    if (!projectState) {
-      console.error("❌ No project state found");
-      return;
-    }
-
-    // ✅ SAVE AS SINGLE OBJECT (CRITICAL FIX)
-    projectState.hiredContractor = contractor;
-
-    saveProjectState();
-
-    console.log("✅ Contractor saved:", projectState.hiredContractor);
-
-    alert(`${contractor.name} hired successfully`);
-
-    window.location.href = "estimate-result.html";
-  };
-}
-
-// ===============================
-// CREATE PROJECT (CLEAN + ISOLATED)
-// ===============================
 function initCreateProject() {
   if (!window.location.pathname.includes("create-project.html")) return;
 
   const form = document.getElementById("projectForm");
   if (!form) return;
+
+  if (new URLSearchParams(window.location.search).get("reason") === "project-required") {
+    const guidance = document.querySelector(".form-subtext");
+    if (guidance) {
+      guidance.textContent = "Create a project before estimating or managing construction. Your existing projects are preserved.";
+    }
+  }
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -3092,20 +1991,24 @@ function initEstimatorUI() {
   const houseSize = document.getElementById("houseSize");
   const location = document.getElementById("location");
 
-  handleSelection(bedroomBtns, val => bedrooms = val);
-  handleSelection(floorBtns, val => floors = val);
+  handleSelection(bedroomBtns, val => { bedrooms = val; updateEstimate(); });
+  handleSelection(floorBtns, val => { floors = val; updateEstimate(); });
 
   function updateEstimate() {
-    const size = parseInt(houseSize?.value);
+    const size = Number(houseSize?.value);
     const loc = location?.value?.toLowerCase();
 
-    if (!size || !bedrooms || !floors) return;
+    if (!Number.isFinite(size) || size <= 0 || !bedrooms || !floors) {
+      const display = document.getElementById("liveEstimate");
+      if (display) display.textContent = "GH₵ —";
+      return;
+    }
 
     const estimate = calculateEstimate(size, bedrooms, floors, loc);
 
     const display = document.getElementById("liveEstimate");
     if (display) {
-      display.textContent = "₵" + Math.round(estimate).toLocaleString();
+      display.textContent = Financials.format(Math.round(estimate * 100) / 100);
     }
   }
 
@@ -3124,6 +2027,8 @@ function initEstimateButton() {
 
   btn.addEventListener("click", () => {
 
+    if (!requireProjectContext()) return;
+
     const houseSize = document.getElementById("houseSize")?.value;
     const location = document.getElementById("location")?.value;
 
@@ -3138,7 +2043,7 @@ function initEstimateButton() {
       return;
     }
 
-    const totalCost = calculateEstimate(
+    const rawTotal = calculateEstimate(
       Number(houseSize),
       Number(bedrooms),
       Number(floors),
@@ -3149,32 +2054,16 @@ function initEstimateButton() {
     // SAVE ESTIMATE INTO PROJECT
     // =========================
 
-    if (projectState) {
-      projectState.budget = totalCost;
-
-      // Update in projects array
-      const projectIndex = projects.findIndex(p => p.id === currentProjectId);
-      if (projectIndex !== -1) {
-        projects[projectIndex] = projectState;
-      }
-
-      // Persist
-      localStorage.setItem("projects", JSON.stringify(projects));
+    if (!Number.isFinite(Number(houseSize)) || Number(houseSize) <= 0 || !Number.isFinite(rawTotal) || rawTotal <= 0 || !Number.isSafeInteger(Math.round(rawTotal * 100))) {
+      alert("Enter a positive house size and valid building specifications.");
+      return;
     }
-
-    // ✅ UPDATE ACTIVE PROJECT
-  if (projectState) {
+    const totalCost = Math.round(rawTotal * 100) / 100;
+    if (projectState.estimate) {
+      projectState.estimateRevisions = projectState.estimateRevisions || [];
+      projectState.estimateRevisions.push({ revisedAt: new Date().toISOString(), previousEstimate: JSON.parse(JSON.stringify(projectState.estimate)) });
+    }
     projectState.budget = totalCost;
-
-    // 🔁 persist to projects array
-    const projects = JSON.parse(localStorage.getItem("projects")) || [];
-
-    const updatedProjects = projects.map(p =>
-      p.id === projectState.id ? projectState : p
-    );
-
-    localStorage.setItem("projects", JSON.stringify(updatedProjects));
-  }
 
     // ✅ SAVE ESTIMATE DATA
     const estimateData = {
@@ -3195,21 +2084,17 @@ function initEstimateButton() {
       // =========================
       // 💰 COST BREAKDOWN (NEW)
       // =========================
-      breakdown: {
-        foundation: totalCost * 0.2,
-        structure: totalCost * 0.25,
-        roofing: totalCost * 0.15,
-        finishing: totalCost * 0.3,
-        others: totalCost * 0.1
-      }
+      breakdown: {}
     };
 
+    projectState.allocationVersion = 0;
+    Financials.allocate(projectState);
     saveProjectState();
 
     // =========================
     // NAVIGATE
     // =========================
-    window.location.href = "contractors.html";
+    window.location.href = "estimate-result.html";
   });
 }
 
@@ -3229,7 +2114,12 @@ function initEstimateResultPage() {
   const data = projectState.estimate;
 
   if (!data) {
-    console.error("No estimate data found");
+    const name = document.getElementById("projectNameDisplay");
+    if (name) name.textContent = projectState.projectName || "Untitled Project";
+    const estimate = document.getElementById("estimateValue");
+    if (estimate) estimate.textContent = "No estimate yet";
+    refreshUI();
+    window.TaskNavigation?.fromUrl();
     return;
   }
 
@@ -3282,7 +2172,7 @@ function initEstimateResultPage() {
   // =========================
   const estimateValue = document.getElementById("estimateValue");
   if (estimateValue) {
-    estimateValue.textContent = "₵" + Math.round(totalCost).toLocaleString();
+    estimateValue.textContent = Financials.format(totalCost);
   }
 
   const estimateLocation = document.getElementById("estimateLocation");
@@ -3293,49 +2183,12 @@ function initEstimateResultPage() {
   // =========================
   // STAGE BREAKDOWN
   // =========================
-  const stageWeights = {
-    foundation: 0.2,
-    structure: 0.3,
-    roofing: 0.2,
-    windows: 0.1,
-    finishing: 0.2
-  };
-
-  const breakdown = {};
-
-  Object.keys(stageWeights).forEach(stage => {
-    breakdown[stage] = totalCost * stageWeights[stage];
-  });
-
-  updateStage(".foundation .amount", breakdown.foundation);
-  updateStage(".structure .amount", breakdown.structure);
-  updateStage(".roofing .amount", breakdown.roofing);
-  updateStage(".windows .amount", breakdown.windows);
-  updateStage(".finishing .amount", breakdown.finishing);
-
-  // =========================
-  // DISTRIBUTE COST (RUN ONCE)
-  // =========================
-  if (!projectState.costDistributed) {
-
-    const breakdown = projectState.estimate?.breakdown || {};
-
-    projectState.stages.forEach(stage => {
-      const stageCost = breakdown[stage.id] || 0;
-
-      if (!stage.tasks || stage.tasks.length === 0) return;
-
-      const costPerTask = stageCost / stage.tasks.length;
-
-      stage.tasks.forEach(task => {
-        task.estimatedCost = Math.round(costPerTask);
-      });
-
-    });
-
-    projectState.costDistributed = true;
-    localStorage.setItem("projectState", JSON.stringify(projectState));
+  Financials.allocate(projectState);
+  const breakdown = projectState.estimate.breakdown;
+  for (const stageId of Object.keys(Financials.STAGE_WEIGHTS)) {
+    updateStage("." + stageId + " .amount", breakdown[stageId]);
   }
+  saveProjectState();
 
   // =========================
   // MATERIAL ESTIMATION
@@ -3368,6 +2221,7 @@ function initEstimateResultPage() {
   // =========================
   setTimeout(() => {
     refreshUI();
+    window.TaskNavigation?.fromUrl();
   }, 0);
 }
 
@@ -3377,6 +2231,13 @@ function initEstimateResultPage() {
 function renderChart(values) {
   const canvas = document.getElementById("costChart");
   if (!canvas) return;
+
+  if (typeof window.Chart !== "function") {
+    console.warn("Cost chart unavailable; project workspace remains accessible.");
+    return;
+  }
+
+  try {
 
   const ctx = canvas.getContext("2d");
 
@@ -3398,14 +2259,15 @@ function renderChart(values) {
       maintainAspectRatio: false
     }
   });
+  } catch (error) {
+    console.warn("Cost chart could not be rendered:", error);
+  }
 }
 
 // ===========================
 // DASHBOARD UI (INDEX PAGE)
 // ===========================
 function updateDashboardUI() {
-  if (!projectState) return;
-
   const state = projectState;
 
   // =========================
@@ -3416,7 +2278,7 @@ function updateDashboardUI() {
     const currentNameEl = document.getElementById("currentProjectName");
 
     if (currentNameEl) {
-      currentNameEl.textContent = state.projectName || "My Project";
+      currentNameEl.textContent = "No project selected";
     }
     const progressEl = document.getElementById("progressPercent");
     const fillEl = document.getElementById("progressFill");
@@ -3428,7 +2290,7 @@ function updateDashboardUI() {
     if (progressEl) progressEl.textContent = "0%";
     if (fillEl) fillEl.style.width = "0%";
     if (stageEl) stageEl.textContent = "Not started";
-    if (budgetEl) budgetEl.textContent = "₵0";
+    if (budgetEl) budgetEl.textContent = "GH₵0";
 
     return;
   }
@@ -3436,39 +2298,14 @@ function updateDashboardUI() {
   // =========================
   // CALCULATE PROGRESS
   // =========================
-  let totalTasks = 0;
-  let completedTasks = 0;
-
-  state.stages.forEach(stage => {
-    totalTasks += stage.tasks.length;
-    completedTasks += stage.tasks.filter(t => t.status === "completed").length;
-  });
-
-  const progress = totalTasks === 0
-    ? 0
-    : Math.round((completedTasks / totalTasks) * 100);
-
-  // =========================
-  // CURRENT STAGE
-  // =========================
-  const currentStageObj = getCurrentStage(state);
-
-  const allCompleted = state.isCompleted === true;
-
-  const hasStarted = state.stages.some(stage =>
-    stage.tasks.some(t => t.status === "completed")
-  );
-
-  console.log("Dashboard Stage Check:", {
-  currentStage: state.currentStage,
-  stages: state.stages.map(s => s.id),
-  found: currentStageObj
-});
+  const construction = Construction.summary(state);
+  const progress = construction.percent;
 
   // =========================
   // UPDATE UI
   // =========================
   const nameEl = document.getElementById("projectName");
+  const currentNameEl = document.getElementById("currentProjectName");
   const progressEl = document.getElementById("progressPercent");
   const fillEl = document.getElementById("progressFill");
   const stageEl = document.getElementById("stageText");
@@ -3476,6 +2313,9 @@ function updateDashboardUI() {
 
   if (nameEl) {
     nameEl.textContent = state.projectName || "My Project";
+  }
+  if (currentNameEl) {
+    currentNameEl.textContent = state.projectName || "Untitled Project";
   }
 
   if (progressEl) {
@@ -3486,33 +2326,20 @@ function updateDashboardUI() {
     fillEl.style.width = progress + "%";
   }
 
-  if (stageEl) {
-    if (!hasStarted) {
-      stageEl.textContent = "Not started";
-    } 
-    else if (allCompleted) {
-      stageEl.textContent = "Completed";
-    } 
-    else if (currentStageObj) {
-      stageEl.textContent = currentStageObj.name;
-    } 
-    else {
-      stageEl.textContent = "Not started";
-    }
-  }
+  if (stageEl) stageEl.textContent = Construction.projectLabel(state);
 
   const { budget: budgetValue, spent: spentValue, variance } =
   calculateProjectFinancials(state);
 
   if (budgetEl) {
-    budgetEl.textContent = "₵" + Math.round(budgetValue).toLocaleString();
+    budgetEl.textContent = Financials.format(budgetValue);
   }
 
   const spentEl = document.getElementById("projectSpent");
   const varianceEl = document.getElementById("projectVariance");
 
   if (varianceEl) {
-    const absValue = Math.abs(variance).toFixed(1);
+    const absValue = Math.abs(variance || 0).toFixed(1);
 
     if (variance < 0) {
       varianceEl.textContent = absValue + "% under budget";
@@ -3528,12 +2355,12 @@ function updateDashboardUI() {
     }
   }
   if (spentEl) {
-    spentEl.textContent = "₵" + Math.round(spentValue).toLocaleString();
+    spentEl.textContent = Financials.format(spentValue);
   }
 
   if (varianceEl) {
     const sign = variance > 0 ? "+" : "";
-    varianceEl.textContent = sign + variance.toFixed(1) + "%";
+    varianceEl.textContent = variance === null ? "Unavailable" : sign + variance.toFixed(1) + "%";
   }
 
   renderStageTracker(); 
@@ -3572,7 +2399,8 @@ function renderProjectSwitcher() {
 
     // reload state cleanly
     loadProjectState();
-    updateDashboardUI();
+    expandedStages = {};
+    refreshUI();
   };
 }
 
@@ -3580,151 +2408,112 @@ function renderProjectSwitcher() {
 // PROJECT MANAGER PAGE
 // ===============================
 function initProjectsPage() {
-  const container = document.getElementById("projectList");
+  const container = document.getElementById('projectList');
   if (!container) return;
-
-  container.innerHTML = "";
-  const activeProject = projects.find(p => !p.isCompleted);
-  const otherProjects = projects.filter(p => p.id !== activeProject?.id);
-
-  if (!projects || projects.length === 0) {
-    container.innerHTML = "<p>No projects yet</p>";
+  projects = JSON.parse(localStorage.getItem('projects')) || [];
+  currentProjectId = localStorage.getItem('currentProjectId');
+  window.ProjectsMedia?.begin();
+  container.replaceChildren();
+  const node = (tag, text, className) => {
+    const element = document.createElement(tag);
+    if (text !== undefined) element.textContent = text;
+    if (className) element.className = className;
+    return element;
+  };
+  const summaryText = document.getElementById('projectsSummary');
+  if (summaryText) summaryText.textContent = projects.length
+    ? `${projects.length} project${projects.length === 1 ? '' : 's'} · ${projects.filter(p => Construction.summary(p).isCompleted).length} completed`
+    : 'Your building journey starts here';
+  if (!projects.length) {
+    const empty = node('section', undefined, 'projects-empty');
+    const icon = node('span', undefined, 'projects-empty-icon'); icon.dataset.icon = 'projects';
+    const link = node('a', 'Create your first project', 'new-project-btn'); link.href = 'create-project.html';
+    empty.append(icon, node('h2', 'A place for every project'), node('p', 'Create a project to plan your budget, track construction tasks and keep your expenditure together.'), link);
+    container.append(empty);
     return;
   }
-
-  if (activeProject) {
-  const card = document.createElement("div");
-  card.className = "project-card active-project";
-
-  const progress = calculateProjectProgress(activeProject);
-
-  const stageObj = activeProject.stages?.find(s => s.id === activeProject.currentStage);
-  const stageName = stageObj?.name || "In progress";
-
-  card.innerHTML = `
-    <div class="project-header">
-      <div class="project-title">
-        ${activeProject.projectName || "Untitled Project"}
-      </div>
-      <div class="project-status active">In Progress</div>
-    </div>
-
-    <div class="project-progress">
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: ${progress}%"></div>
-      </div>
-    </div>
-
-    <div class="project-card-meta">
-      <span>₵${(activeProject.spent || 0).toLocaleString()}</span>
-      <span>${stageName}</span>
-    </div>
-
-    <div class="project-actions">
-      <button class="open-btn">Continue Project</button>
-      <button class="delete-btn">Delete</button>
-    </div>
-  `;
-
-  // OPEN
-  card.querySelector(".open-btn").onclick = () => {
-    currentProjectId = activeProject.id;
-    localStorage.setItem("currentProjectId", activeProject.id);
-    goTo("estimate-result.html");
-  };
-
-  // DELETE
-    card.querySelector(".delete-btn").onclick = () => {
-      const confirmDelete = confirm(`Delete "${activeProject.projectName}"?`);
-      if (!confirmDelete) return;
-
-      projects = projects.filter(p => p.id !== activeProject.id);
-      localStorage.setItem("projects", JSON.stringify(projects));
-
-      if (activeProject.id === currentProjectId) {
-        currentProjectId = projects[0]?.id || null;
-        localStorage.setItem("currentProjectId", currentProjectId);
-      }
-
-      initProjectsPage();
-    };
-
-    container.appendChild(card);
-  }
-  otherProjects.forEach(project => {
-    const card = document.createElement("div");
-    card.className = "project-card";
-
-    // =========================
-    // CALCULATE PROGRESS
-    // =========================
-    const progress = calculateProjectProgress(project);
-    
-    // =========================
-    // CURRENT STAGE
-    // =========================
-    const stageObj = project.stages?.find(s => s.id === project.currentStage);
-    const stageName = project.isCompleted
-      ? "Completed"
-      : (stageObj?.name || "Not started");
-
-    card.innerHTML = `
-      <div class="project-header">
-        <div class="project-title">
-          ${project.projectName || "Untitled Project"}
-        </div>
-      </div>
-
-      ${!project.isCompleted ? `
-        <div class="project-progress">
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${progress}%"></div>
-          </div>
-        </div>
-      ` : ``}
-
-      <div class="project-card-meta">
-        <span>₵${(project.spent || 0).toLocaleString()}</span>
-        <span>${project.isCompleted ? "Completed" : stageName}</span>
-      </div>
-
-      <div class="project-actions">
-        <button class="open-btn">Open</button>
-        <button class="delete-btn">Delete</button>
-      </div>
-    `;
-
-    // =========================
-    // OPEN PROJECT
-    // =========================
-    card.querySelector(".open-btn").onclick = () => {
+  const ordered = [...projects.filter(p => p.id === currentProjectId), ...projects.filter(p => p.id !== currentProjectId)];
+  for (const project of ordered) {
+    const selected = project.id === currentProjectId;
+    const summary = Construction.summary(project), financials = Financials.calculate(project);
+    const card = node('article', undefined, `project-card project-${summary.status}${selected ? ' active-project' : ''}`);
+    card.dataset.projectId = project.id;
+    const name = project.projectName || 'Untitled Project';
+    const headingId = `project-heading-${projects.indexOf(project)}`;
+    card.setAttribute('aria-labelledby', headingId);
+    const top = ProjectsMedia.create(project);
+    if (selected) top.append(node('span', 'Selected project', 'projects-selected'));
+    const badge = node('span', summary.label, `projects-status ${summary.status}`);
+    top.append(badge);
+    const heading = node('h2', name, 'project-title'); heading.id = headingId;
+    const location = node('p', project.location || project.estimate?.location || 'Location not recorded', 'projects-location');
+    const identity = node('p', `Project ${projects.indexOf(project) + 1}`, 'projects-reference');
+    const dateKey = stamp => typeof stamp === 'string' && Number.isFinite(Date.parse(stamp))
+      ? new Date(stamp).toLocaleDateString('en-GB') : '';
+    identity.hidden = projects.filter(other => other.projectName === project.projectName &&
+      (other.location || other.estimate?.location || '') === (project.location || project.estimate?.location || '') &&
+      dateKey(other.createdAt) === dateKey(project.createdAt)).length < 2;
+    const progress = node('div', undefined, 'project-progress');
+    const progressLabel = node('div', undefined, 'projects-progress-label');
+    progressLabel.append(node('span', 'Task completion'), node('strong', `${summary.percent}%`));
+    const bar = node('div', undefined, 'progress-bar');
+    bar.setAttribute('role', 'progressbar'); bar.setAttribute('aria-label', `${name}: task completion`);
+    bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', '100'); bar.setAttribute('aria-valuenow', String(summary.percent));
+    const fill = node('div', undefined, 'progress-fill'); fill.style.width = `${summary.percent}%`; bar.append(fill);
+    progress.append(progressLabel, bar, node('p', `${summary.completed} of ${summary.total} tasks completed`, 'project-task-summary'));
+    const metrics = node('dl', undefined, 'projects-finances');
+    const rawBudget = project.estimate?.totalCost ?? project.budget;
+    const hasBudget = project.estimate || Number(rawBudget) > 0;
+    const validBudget = rawBudget !== null && rawBudget !== undefined && Number.isFinite(Number(rawBudget)) && Number(rawBudget) >= 0;
+    for (const [label, value] of [
+      ['Planned budget', !hasBudget ? 'Not estimated' : validBudget ? Financials.format(financials.budget) : 'Unavailable'],
+      ['Recorded expenditure', Financials.format(financials.spent)]
+    ]) {
+      const metric = node('div'), caption = node('dt'), icon = node('span');
+      icon.dataset.icon = label === 'Planned budget' ? 'estimate' : 'expenses';
+      caption.append(icon, node('span', label));
+      metric.append(caption, node('dd', value)); metrics.append(metric);
+    }
+    const meta = node('div', undefined, 'projects-card-meta');
+    const stamp = project.createdAt;
+    const date = typeof stamp === 'string' && stamp.trim() ? new Date(stamp) : null;
+    if (date && Number.isFinite(date.getTime())) {
+      const time = node('time', `Created ${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`);
+      time.dateTime = stamp; meta.append(time);
+    } else meta.append(node('span', 'Creation date not recorded'));
+    card.append(top, heading, location, meta, identity, progress, metrics);
+    if (!financials.available) card.append(node('p', 'Expense records need review. Existing data is preserved.', 'projects-data-note'));
+    else if (legacyFinancialNotice(project)) card.append(node('p', 'Historical totals are kept separately from recorded expenditure.', 'projects-data-note'));
+    const actions = node('div', undefined, 'project-actions');
+    const actionContext = `${name}, ${location.textContent}, ${meta.textContent}${identity.hidden ? '' : `, ${identity.textContent}`}`;
+    const open = node('button', summary.isCompleted ? 'View Project' : 'Open Project', 'open-btn'); open.type = 'button';
+    open.setAttribute('aria-label', `${open.textContent}: ${actionContext}`);
+    open.onclick = () => {
       currentProjectId = project.id;
-      localStorage.setItem("currentProjectId", project.id);
-      goTo("estimate-result.html");
+      localStorage.setItem('currentProjectId', project.id);
+      goTo('estimate-result.html');
     };
-
-    // =========================
-    // DELETE PROJECT
-    // =========================
-    card.querySelector(".delete-btn").onclick = () => {
-      const confirmDelete = confirm(`Delete "${project.projectName}"?`);
-      if (!confirmDelete) return;
-
-      projects = projects.filter(p => p.id !== project.id);
-
-      localStorage.setItem("projects", JSON.stringify(projects));
-
+    const remove = node('button', 'Delete', 'delete-btn'); remove.type = 'button';
+    remove.setAttribute('aria-label', `Delete project: ${actionContext}`);
+    remove.onclick = () => {
+      if (!confirm(`Delete "${name}"?\nReference: ${project.id}\nThis removes this project's saved record.`)) return;
+      // Read again so deleting a card cannot overwrite updates saved in another tab.
+      const fresh = JSON.parse(localStorage.getItem('projects')) || [];
+      projects = fresh.filter(p => p.id !== project.id);
+      localStorage.setItem('projects', JSON.stringify(projects));
+      currentProjectId = localStorage.getItem('currentProjectId');
       if (project.id === currentProjectId) {
         currentProjectId = projects[0]?.id || null;
-        localStorage.setItem("currentProjectId", currentProjectId);
+        if (currentProjectId) localStorage.setItem('currentProjectId', currentProjectId);
+        else localStorage.removeItem('currentProjectId');
       }
-
       initProjectsPage();
+      (container.querySelector('.open-btn') || document.querySelector('.projects-header .new-project-btn'))?.focus();
     };
-
-    container.appendChild(card);
-  });
+    actions.append(open, remove); card.append(actions); container.append(card);
+  }
 }
+
 
 // ===============================
 // 📄 DOWNLOAD PROJECT SUMMARY
@@ -3735,7 +2524,9 @@ function downloadProjectSummary() {
   const data = {
     name: projectState.projectName,
     budget: projectState.estimate?.totalCost || 0,
-    spent: projectState.spent || 0,
+    spent: Financials.calculate(projectState).spent,
+    expenses: projectState.expenses || [],
+    legacyFinancials: projectState.legacyFinancials || null,
     startDate: projectState.startDate,
     endDate: projectState.endDate,
     contractor: projectState.hiredContractor?.name || "None",
@@ -3795,20 +2586,8 @@ function showToast(message) {
 // SHOW PROJECT COMPLETION
 // ===============================
 function showProjectCompletion() {
-  console.log("Completion state:", projectState);
-  const modal = document.getElementById("projectCompleteModal");
-  if (!modal) return;
-
-  document.getElementById("summaryBudget").textContent =
-    `₵${(projectState.budget || 0).toLocaleString()}`;
-
-  document.getElementById("summarySpent").textContent =
-    `₵${(projectState.spent || 0).toLocaleString()}`;
-
-  modal.classList.remove("hidden");
-
-  // 🎊 ADD THIS LINE
-  launchConfetti();
+  if (window.ProjectExperience) return ProjectExperience.openReview();
+  ConstructionUI.message("All recorded tasks are completed. Open the project dashboard to review completion.");
 }
 
 // ===============================
@@ -3867,47 +2646,18 @@ function launchConfetti() {
 //    TASK INTELLIGENCE
 // ============================
 function renderTaskIntelligence() {
-  const box = document.getElementById("taskIntelligence");
-  if (!box || !projectState) return;
-
-  const stage = projectState.stages.find(
-    s => s.id === projectState.currentStage
-  );
-
-  if (!stage) return;
-
-  const task = stage.tasks.find(
-    t => t.status === "pending" || t.status === "active"
-  );
-
-  if (!task) return;
-
-  // ✅ USE YOUR EXISTING ENGINE
-  const insights = generateTaskInsights(task, projectState);
-
-  // ✅ RENDER USING YOUR EXISTING RENDERER
-  const insightsEl = renderTaskInsights(insights);
-
-  box.innerHTML = ""; // clear
-
-  if (insightsEl) {
-    box.appendChild(insightsEl);
-  }
+  const box = document.getElementById('taskIntelligence'); if(!box)return;box.replaceChildren();
+  const next = window.TaskNavigation?.unfinished(projectState)[0] || Construction.nextTask(projectState);
+  if(!next)return;
+  const text=document.createElement('p');text.textContent='Choose any stage or task below. Professional support is optional.';box.append(text);
 }
 
-// ========================
-//    TOGGLE SECTION
-// ========================
 document.querySelectorAll(".toggle-header").forEach(header => {
   header.addEventListener("click", function () {
-    const section = this.parentElement;
-    section.classList.toggle("active");
+    this.parentElement.classList.toggle("active");
   });
 });
 
-// ===============================
-// 💬 SHOW CUSTOM ALERT (WITH CALLBACK)
-// ===============================
 function showAlert(message, onClose) {
   const overlay = document.getElementById("customAlert");
   const text = document.getElementById("alertMessage");

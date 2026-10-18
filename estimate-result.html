@@ -1,447 +1,50 @@
 <!DOCTYPE html>
-
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Project Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="premium.css">
-  <link rel="icon" href="data:,">
-</head>
-
-<body>
-
-<header class="estimate-header">
-  <a href="estimator.html">← Back</a>
-  <h1>Project Dashboard</h1>
-  <p id="summaryText"></p>
-</header>
-
-<main class="estimate-result">
-
-  <!-- =============================== -->
-
-  <!-- RESULT CARD -->
-
-  <!-- =============================== -->
-
-  <div class="summary-wrapper">
-    <section class="summary-card">
-
-
-  <!-- 👷 CONTRACTOR -->
-  <div class="contractor-top" id="contractorSummary">
-    <img id="contractorImageSmall">
-    <a id="contractorNameSmall" href="#">Contractor Name</a>
-  </div>
-
-  <!-- MAIN GRID -->
-  <div class="summary-grid">
-
-    <div class="summary-left">
-
-    <!-- 🏷️ PROJECT NAME FIRST -->
-    <h2 id="projectNameDisplay" style="margin-bottom:10px;">Project Name</h2>
-
-    <!-- 💰 ESTIMATED -->
-    <p style="font-weight:300;">Estimated Total Cost</p>
-    <h2 id="estimateValue">₵0</h2>
-    <p style="font-size:14px; font-weight:600;">
-      Variance: <span id="projectVariance">0%</span>
-    </p>
-  </div>
-
-    <div class="summary-right">
-
-      <!-- 📍 LOCATION + DATE -->
-      <p id="estimateLocation"></p>
-      <p id="projectDates"></p>
-
-      <!-- 💰 ACTUAL -->
-      <div style="margin-top:15px;">
-        <p style="font-weight:600;">Actual Spend</p>
-        <h2 id="projectSpent">₵0</h2>
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- ACTIONS -->
-  <div class="result-actions">
-    <button onclick="downloadProjectSummary()">Download</button>
-    <button class="secondary-btn">Share</button>
-  </div>
-
-</section>
-
-  </div>
-
-  <!-- =============================== -->
-  <!-- STAGE TRACK -->
-  <!-- =============================== -->
-
-  <div class="stage-track-wrapper card">
-    <div id="stageTracker" class="stage-track"></div>
-    <p id="stageMeta" class="stage-meta"></p>
-  </div>
-
-  <!-- ============================= -->
-  <!-- CURRENT ACTION CARD -->
-  <!-- ============================= -->
-  <div class="current-action-card">
-  <div class="action-header">
-    🎯 Your Next Step
-  </div>
-
-  <div class="action-body">
-    <div class="action-stage"></div>
-    <div class="action-task"></div>
-
-    <div id="currentActionButton"></div>
-
-    <!-- 🔥 NEW: TASK INTELLIGENCE -->
-    <div class="task-intelligence" id="taskIntelligence"></div>
-
-    <div class="action-cost">
-      Estimated: ₵13,000
-    </div>
-
-  </div>
-  </div>
-</div>
-
-<!-- ============================= -->
-<!-- PROGRESSIVE INSIGHTS -->
-<!-- ============================= -->
- <div class="insights-toggle" id="insightsToggle">
-  View Project Insights ↓
-</div>
-
-<div class="project-insights" id="projectInsights">
-  
-  <!-- 🔹 Budget + Recommendations -->
-  <div class="insight-card">
-    <h3>📊 Budget Status</h3>
-    <p>No data yet</p>
-
-    <h4>💡 Recommendations</h4>
-    <ul>
-      <li>Start Site Clearing</li>
-      <li>Hire a general contractor for site clearing</li>
-    </ul>
-  </div>
-
-  <!-- 🔹 Materials -->
-  <div class="insight-card">
-    <h3>🧱 Estimated Materials</h3>
-    <ul>
-      <li>Cement (50kg bags): 960</li>
-      <li>Iron rods (12mm): 4.8 tons</li>
-      <li>Blocks (9 inch): 8400</li>
-      <li>Sand (loads): 12</li>
-      <li>Roofing sheets: 144</li>
-    </ul>
-  </div>
-
-</div>
-
-  <!-- =============================== -->
-
-  <!-- TASK WORKFLOW -->
-
-  <!-- =============================== -->
-  <div id="recommendationList"></div>
-    <div class="toggle-section">
-
-    <div class="toggle-header">
-      📊 Project Stages
-      <span class="toggle-icon">▼</span>
-    </div>
-
-    <div class="toggle-content">
-
-      <section class="progress-card">
-        <ul id="taskList" class="task-list"></ul>
-      </section>
-
-    </div>
-
-  </div>
-
-  <!-- =============================== -->
-
-    <!-- COST DISTRIBUTION -->
-
-    <!-- =============================== -->
-
-    <div class="toggle-section">
-
-    <div class="toggle-header">
-      📈 Cost Distribution
-      <span class="toggle-icon">▼</span>
-    </div>
-
-    <div class="toggle-content">
-
-      <div class="chart-card section-spacing">
-        <p>Breakdown by construction stage</p>
-
-        <div class="chart-container" style="height: 250px;">
-          <canvas id="costChart"></canvas>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- =============================== -->
-
-    <!-- 📊 PROJECT UPDATES (INFO LAYER) -->
-
-    <!-- =============================== -->
-
-    <div class="toggle-section">
-
-    <div class="toggle-header">
-      📊 Project Insight
-      <span class="toggle-icon">▼</span>
-    </div>
-
-    <div class="toggle-content">
-
-      <div class="insights-card">
-        <ul id="projectInsightList"></ul>
-      </div>
-
-    </div>
-
-  </div>
-
-    <!-- =============================== -->
-
-    <!-- STAGE BREAKDOWN -->
-
-    <!-- =============================== -->
-    <div class="toggle-section">
-
-    <div class="toggle-header">
-      💡 Stage Quick Tips
-      <span class="toggle-icon">▼</span>
-    </div>
-
-    <div class="toggle-content">
-    <section class="stage-breakdown">
-
-
-    <div class="stage-card foundation section-spacing">
-      <div class="stage-header">
-        <h4>1. Foundation</h4>
-        <span class="amount">₵0</span>
-      </div>
-      <div class="quick-tips">
-        <p class="tips-title">📈 Quick Tips:</p>
-        <ul>
-          <li>Use reinforced concrete for stability</li>
-          <li>Ensure proper soil testing</li>
-          <li>Allow 14–21 days for curing</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="stage-card structure section-spacing">
-      <div class="stage-header">
-        <h4>2. Walls & Structure</h4>
-        <span class="amount">₵0</span>
-      </div>
-      <div class="quick-tips">
-        <p class="tips-title">📈 Quick Tips:</p>
-        <ul>
-          <li>Use quality cement blocks</li>
-          <li>Maintain proper wall thickness</li>
-          <li>Include proper ventilation</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="stage-card roofing section-spacing">
-      <div class="stage-header">
-        <h4>3. Roofing</h4>
-        <span class="amount">₵0</span>
-      </div>
-      <div class="quick-tips">
-        <p class="tips-title">📈 Quick Tips:</p>
-        <ul>
-          <li>Choose durable roofing sheets</li>
-          <li>Ensure proper waterproofing</li>
-          <li>Consider rain water harvesting</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="stage-card windows section-spacing">
-      <div class="stage-header">
-        <h4>4. Windows</h4>
-        <span class="amount">₵0</span>
-      </div>
-      <div class="quick-tips">
-        <p class="tips-title">📈 Quick Tips:</p>
-        <ul>
-          <li>Use burglar-proof materials</li>
-          <li>Ensure proper measurements</li>
-          <li>Include mosquito nets</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="stage-card finishing section-spacing">
-      <div class="stage-header">
-        <h4>5. Finishing</h4>
-        <span class="amount">₵0</span>
-      </div>
-      <div class="quick-tips">
-        <p class="tips-title">📈 Quick Tips:</p>
-        <ul>
-          <li>Plan electrical and plumbing early</li>
-          <li>Use quality paint and tiles</li>
-          <li>Consider energy-efficient fixtures</li>
-        </ul>
-      </div>
-    </div>
-    </section>
-    </div>
-  </div>
-
-    <!-- =============================== -->
-
-    <!-- MATERIALS -->
-
-    <!-- =============================== -->
-
-    <div class="toggle-section">
-
-    <div class="toggle-header">
-      🧱 Estimated Materials
-      <span class="toggle-icon">▼</span>
-    </div>
-
-    <div class="toggle-content">
-
-      <div class="materials-card section-spacing">
-        <p id="materialInsight"></p>
-
-        <div class="material-item"><span>Cement (50kg bags)</span><span>0</span></div>
-        <div class="material-item"><span>Iron rods (12mm)</span><span>0</span></div>
-        <div class="material-item"><span>Blocks (9 inch)</span><span>0</span></div>
-        <div class="material-item"><span>Sand (loads)</span><span>0</span></div>
-        <div class="material-item"><span>Roofing sheets</span><span>0</span></div>
-      </div>
-
-    </div>
-
-  </div>
-
-
-<button class="secondary-btn full" onclick="window.location.href='materials.html'">
-  Check Current Material Prices
-</button>
-
-  </section>
-
-</main>
-
-<nav class="bottom-nav">
-  <a href="index.html">Home</a>
-  <a href="projects.html">Projects</a>
-  <a href="contractors.html">Contractors</a>
-  <a href="account.html">Account</a>
-</nav>
-
-<!-- ========================= -->
-<!-- TASK COMPLETION MODAL -->
-<!-- ========================= -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Construction plan &middot; BuildSmart GH</title><link rel="icon" href="data:,">
+<link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="construction.css"><link rel="stylesheet" href="finance.css"><link rel="stylesheet" href="premium.css"><link rel="stylesheet" href="project-experience.css"><link rel="stylesheet" href="contractor-support.css"><link rel="stylesheet" href="construction-plan.css"></head>
+<body class="construction-plan-page"><main class="estimate-result plan-workspace"><h1 class="sr-only">Construction plan</h1>
+<section class="plan-summary" aria-label="Project overview"><div id="planCover" class="plan-cover"></div><div class="plan-identity"><h2 id="projectNameDisplay">Select a project</h2><p id="estimateLocation"></p><p id="projectDates"></p><div class="plan-status-line"><span id="planStatus" class="plan-badge"></span><span id="planActivity"></span></div></div><div class="plan-finances"><span>Planned estimate</span><strong id="estimateValue">Unavailable</strong><span>Recorded expenditure</span><strong id="projectSpent">Unavailable</strong><small>Remaining balance: <span id="planBalance">Unavailable</span></small><p id="workspaceLegacyFinancials" class="finance-notice" hidden></p></div><div class="plan-completion"><div id="planRing" class="plan-ring"><div><strong id="planPercent">0%</strong><span>Tasks</span></div></div><div><ul id="planCounts"></ul><small id="planTaskCount"></small></div></div></section>
+<section id="projectExperienceActions" class="project-experience-toolbar" aria-label="Project cover and completion"></section>
+<div class="plan-overview"><section class="plan-panel current-action-card"><h2><span class="plan-icon" data-plan-icon="next"></span>Your Next Step</h2><div class="action-stage"></div><div class="action-task"></div><p id="planNextDescription"></p><div id="currentActionButton"></div><div class="task-intelligence" id="taskIntelligence"></div><div class="action-cost"></div><a class="plan-expense-action" href="expenditure.html">Record an expense</a></section>
+<section class="plan-panel plan-recommendations"><div class="plan-panel-title"><h2><span class="plan-icon" data-plan-icon="people"></span>Contractor Recommendations <small>(Optional)</small></h2><a href="contractors.html">View all</a></div><div id="planRecommendationMount"></div></section>
+<section class="plan-panel plan-photos"><div class="plan-panel-title"><h2><span class="plan-icon" data-plan-icon="photo"></span>Progress Photos</h2><button id="planViewPhotos" class="plan-text-button" type="button">View all photos</button></div><div id="planPhotos" class="plan-photo-grid"></div></section></div>
+<div class="plan-lower"><section class="plan-panel plan-register active" id="task-register" aria-labelledby="registerTitle"><div class="plan-panel-title"><div><h2 id="registerTitle"><span class="plan-icon" data-plan-icon="next"></span>Construction Task Register</h2><p id="planRegisterMeta"></p></div><button id="planExpandAll" class="construction-secondary" type="button">Expand all</button></div><ul id="taskList" class="task-list"></ul><p class="plan-register-note">Task completion reflects your records, not certified physical construction progress. Work can be recorded across stages; contractor assignment is optional.</p></section>
+<aside class="plan-support"><section class="plan-panel"><h2><span class="plan-icon" data-plan-icon="people"></span>Assigned Contractors <small>(Optional)</small></h2><div id="contractorSummary"></div><a href="contractors.html" class="plan-add-contractor">+ Add contractor <small>Link a contractor to this project (optional)</small></a></section><section class="plan-panel plan-guidance"><h2><span class="plan-icon" data-plan-icon="guide"></span>Project guidance</h2><p>Review task guidance and record expenses as work progresses. Professional support is optional.</p><button id="planGuidance" class="plan-text-button" type="button">Review current task guidance &rarr;</button></section><section class="plan-panel plan-resources"><h2>Planning resources</h2><a href="estimator.html">Review your estimate <span aria-hidden="true">&rarr;</span></a><a href="expenditure.html">Expense ledger <span aria-hidden="true">&rarr;</span></a><a href="materials.html">Material prices <span aria-hidden="true">&rarr;</span></a><button onclick="downloadProjectSummary()" class="plan-text-button" type="button">Download project summary &darr;</button><details><summary>Stage budget distribution</summary><div class="plan-chart"><canvas id="costChart"></canvas></div></details><details><summary>Estimated materials</summary><p id="materialInsight"></p><div class="material-item"><span>Cement (50kg bags)</span><span>0</span></div><div class="material-item"><span>Iron rods (12mm)</span><span>0</span></div><div class="material-item"><span>Blocks (9 inch)</span><span>0</span></div><div class="material-item"><span>Sand (loads)</span><span>0</span></div><div class="material-item"><span>Roofing sheets</span><span>0</span></div></details><details><summary>Project insights</summary><ul id="projectInsightList"></ul></details></section></aside></div></main>
   <div id="taskModal" class="modal hidden">
-
     <div class="modal-overlay"></div>
-
-    <div class="modal-content">
-
-      <h3>Complete Task</h3>
-
-      <div class="form-group">
-        <label id="uploadLabel">Upload Proof</label>
-        <input type="file" id="taskImageInput" />
-      </div>
-
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="taskNotesInput" placeholder="Optional notes..."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Actual Cost (₵)</label>
-        <input type="number" id="taskCostInput" placeholder="Enter actual cost" />
-      </div>
-
-      <div class="modal-actions">
-        <button id="confirmTaskBtn" class="primary-btn">Confirm Completion</button>
-        <button id="cancelTaskBtn" class="secondary-btn">Cancel</button>
-      </div>
-
-    </div>
-
-  </div>
-  </div>
-
-  </div>
-</div>
-
-<!-- ========================= -->
-<!-- PROJECT COMPLETION MODAL -->
-<!-- ========================= -->
-  <div id="projectCompleteModal" class="completion-modal hidden">
-    <div class="completion-content">
-
-      <canvas id="confettiCanvas"></canvas>
-
-      <div class="completion-icon">🏆</div>
-
-      <h2>Project Completed!</h2>
-      <p>Your building project has been successfully completed.</p>
-
-      <div class="completion-stats">
-        <div>
-          <span>Budget</span>
-          <strong id="summaryBudget"></strong>
-        </div>
-        <div>
-          <span>Total Spent</span>
-          <strong id="summarySpent"></strong>
+    <div class="modal-content task-details-dialog">
+      <header class="task-dialog-header"><p>CONSTRUCTION TASK</p><h2 id="taskModalTitle" tabindex="-1">Task details</h2><span>Review and update this task's records.</span></header>
+      <div class="task-dialog-body">
+        <section class="task-overview-section" aria-labelledby="taskOverviewTitle">
+          <h3 id="taskOverviewTitle">Task Overview</h3>
+          <dl class="task-overview-grid">
+            <div><dt>Construction stage</dt><dd id="taskStageName"></dd></div>
+            <div><dt>Status</dt><dd id="taskDetailStatus"></dd></div>
+            <div><dt>Planned budget</dt><dd id="taskOverviewPlanned"></dd></div>
+            <div><dt>Recorded expenditure</dt><dd id="taskOverviewRecorded"></dd></div>
+            <div id="taskStartDateRow" hidden><dt>Started</dt><dd id="taskOverviewStart"></dd></div>
+            <div id="taskCompletedDateRow" hidden><dt>Completed</dt><dd id="taskOverviewCompleted"></dd></div>
+          </dl>
+          <div id="taskOverviewDetails"></div>
+          <div id="taskCompletionAction" class="task-completion-action"><p>Task completion is separate from saving changes.</p><button id="confirmTaskBtn" class="construction-secondary" type="button">Complete task</button></div>
+        </section>
+        <div class="task-editor-grid">
+          <section class="task-files-section" aria-labelledby="taskFilesTitle">
+            <h3 id="taskFilesTitle">Files &amp; Notes</h3>
+            <h4>Uploaded files</h4><div id="taskEvidenceList"></div>
+            <div class="form-group"><label id="uploadLabel" for="taskImageInput">Upload photos or files</label><input type="file" id="taskImageInput" multiple accept="image/jpeg,image/png,image/webp,application/pdf" aria-describedby="taskStorageNote" /><p id="taskStorageNote">Files are saved in this browser. They are not backed up online.</p>
+              <details class="task-storage-info"><summary>Storage information</summary><p>JPEG, PNG, WebP or PDF; up to 3 MB per file, 6 files per task, 20 MB per project and 50 MB per browser.</p><p>Files stay in this browser on this device. Clearing browser data or changing the site address can make files unavailable. Project JSON exports do not include file contents.</p></details>
+            </div>
+            <div class="form-group"><label for="taskNotesInput">Task notes <span>(optional)</span></label><textarea maxlength="4000" id="taskNotesInput" rows="4" placeholder="Add an update or a reminder..."></textarea></div>
+          </section>
+          <section class="task-expenses-section" aria-labelledby="taskExpensesTitle">
+            <h3 id="taskExpensesTitle">Expenses <span>(optional)</span></h3><p class="task-section-intro">Only an amount you enter is recorded. Leave it blank to save without adding an expense.</p>
+            <div class="form-group"><label for="taskCostInput">Amount (GH&#8373;)</label><input type="text" inputmode="decimal" id="taskCostInput" placeholder="Optional amount" /></div>
+            <div class="form-group"><label for="taskExpenseDescription">Description</label><input id="taskExpenseDescription" maxlength="240" /></div>
+            <div class="task-expense-meta"><div class="form-group"><label for="taskExpenseDate">Date</label><input type="date" id="taskExpenseDate" /></div><div class="form-group"><label for="taskExpenseCategory">Category</label><select id="taskExpenseCategory"><option>Materials</option><option>Labour</option><option>Equipment</option><option>Transport</option><option>Permits &amp; fees</option><option>Other</option></select></div></div>
+            <p class="task-ledger-note">Expenses are added to your project's expense ledger. Saving files or notes does not mark the task complete.</p>
+          </section>
         </div>
       </div>
-
-      <div class="completion-actions">
-        <button class="primary" onclick="goToProjects()">View Projects</button>
-        <button onclick="startNewProject()">Start New Project</button>
-      </div>
-
+      <footer class="task-dialog-footer"><p id="taskExpenseError" class="finance-task-error" role="alert"></p><div class="modal-actions"><button id="saveTaskInfoBtn" class="primary-btn" type="button">Save Changes</button><button id="cancelTaskBtn" class="secondary-btn" type="button">Cancel</button></div></footer>
     </div>
-  </div>
-
-<!-- ===============================
-💬 CUSTOM ALERT MODAL
-=============================== -->
-<div id="customAlert" class="alert-overlay hidden">
-  <div class="alert-box">
-    <p id="alertMessage"></p>
-    <button id="alertOkBtn">OK</button>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="script.js"></script>
-
-</body>
-</html>
+  </div><div id="customAlert" class="alert-overlay hidden"><div class="alert-box"><p id="alertMessage"></p><button id="alertOkBtn">OK</button></div></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="finance.js"></script><script src="construction.js"></script><script src="evidence.js"></script><script src="task-navigation.js"></script><script src="contractor-model.js"></script><script src="contractor-support.js"></script><script src="script.js"></script><script src="construction-ui.js"></script><script src="project-experience.js"></script><script src="construction-plan.js"></script><script src="ui.js" defer></script></body></html>

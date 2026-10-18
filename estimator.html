@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <title>Cost Estimator</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="premium.css">
   <link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="premium.css">
 </head>
 
 <body>
@@ -111,7 +112,7 @@
     <div class="estimate-panel">
 
       <h3>Estimated Cost</h3>
-      <p id="liveEstimate">₵ —</p>
+      <p id="liveEstimate">GH₵ —</p>
 
       <button type="button" id="calculateBtn">
         Calculate Estimate →
@@ -132,7 +133,12 @@
 </nav>
 
 <!-- ===== SCRIPT (IMPORTANT: keep at bottom) ===== -->
+<script src="finance.js"></script>
+<script src="construction.js"></script>
+<script src="evidence.js"></script>
 <script src="script.js"></script>
+<script src="construction-ui.js"></script><script src="project-experience.js"></script>
 
+<script src="ui.js" defer></script>
 </body>
 </html>
