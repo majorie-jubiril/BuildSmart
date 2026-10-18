@@ -1,5 +1,10 @@
 console.log("SCRIPT LOADED");
 
+// Netlify may serve the same page with or without its .html suffix.
+function appPageName() {
+  return (window.location.pathname.split("/").pop() || "index").replace(/\.html$/, "") + ".html";
+}
+
 // =========================
 // GLOBAL STATE
 // =========================
@@ -650,7 +655,7 @@ function initApp() {
   // =========================
   loadProjectState();
 
-  const path = window.location.pathname;
+  const path = appPageName();
   const requiresProject = ["estimator.html", "estimate-result.html", "project-details.html", "expenditure.html"]
     .some(page => path.endsWith(page));
   if (requiresProject && !requireProjectContext()) return;
@@ -1801,7 +1806,7 @@ function renderDashboardChart() {
 // ===============================
 // CONTRACTOR LIST (SMART FILTER CLEAN)
 // ===============================
-function initContractorList() { if (location.pathname.endsWith('contractors.html')) ContractorSupport.marketplace(); }
+function initContractorList() { if (appPageName() === 'contractors.html') ContractorSupport.marketplace(); }
 
 function initContractorSearch() { /* Combined search and specialty filtering is bound by ContractorSupport.marketplace. */ }
 
@@ -1918,7 +1923,7 @@ function initSavedPage() {
 function initHireButton(contractor) { window.ContractorSupport?.profile(); }
 
 function initCreateProject() {
-  if (!window.location.pathname.includes("create-project.html")) return;
+  if (appPageName() !== "create-project.html") return;
 
   const form = document.getElementById("projectForm");
   if (!form) return;
@@ -1980,7 +1985,7 @@ function initCreateProject() {
 // ESTIMATOR UI
 // ===============================
 function initEstimatorUI() {
-  if (!window.location.pathname.includes("estimator.html")) return;
+  if (appPageName() !== "estimator.html") return;
 
   let bedrooms = null;
   let floors = null;
@@ -2020,7 +2025,7 @@ function initEstimatorUI() {
 // ESTIMATE BUTTON (SAVE + ROUTE)
 // ===============================
 function initEstimateButton() {
-  if (!window.location.pathname.includes("estimator.html")) return;
+  if (appPageName() !== "estimator.html") return;
 
   const btn = document.getElementById("calculateBtn");
   if (!btn) return;
@@ -2102,7 +2107,7 @@ function initEstimateButton() {
 // ESTIMATE RESULT PAGE (CLEAN + STABLE)
 // ===============================
 function initEstimateResultPage() {
-  if (!window.location.pathname.includes("estimate-result.html")) return;
+  if (appPageName() !== "estimate-result.html") return;
 
   console.log("📊 Estimate Result Page Loaded");
 

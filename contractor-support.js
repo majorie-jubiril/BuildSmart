@@ -262,7 +262,8 @@
   }
   let profileReady=false;
   function profile() {
-    if(!location.pathname.endsWith('contractor-profile.html')||profileReady)return;profileReady=true;
+    const page=(location.pathname.split('/').pop()||'index').replace(/\.html$/,'')+'.html';
+    if(page!=='contractor-profile.html'||profileReady)return;profileReady=true;
     let c;try{c=JSON.parse(localStorage.getItem('selectedContractor'));}catch{}
     const main=document.querySelector('.profile-page');if(!c?.name){main?.replaceChildren(el('p','Choose a contractor profile to view its recorded details.'));return;}
     journey(main);main?.querySelector('.profile-identity')?.append(provenance(c));

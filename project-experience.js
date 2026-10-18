@@ -4,7 +4,7 @@
   'use strict';
   const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   const PROJECT_SCOPE = { stageId: '__project__', taskId: 'cover-photos' };
-  const page = location.pathname.split('/').pop();
+  const page = (location.pathname.split('/').pop() || 'index').replace(/\.html$/, '') + '.html';
   let viewKey = '', coverToken = 0, coverUrl, activeDialog, invalidatedState;
   const el = (tag, text, className) => {
     const item = document.createElement(tag);

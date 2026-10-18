@@ -2,7 +2,7 @@
 (() => {
   const paths={home:'M3 10 12 3l9 7v11h-6v-7H9v7H3Z',projects:'M3 5h7l2 3h9v13H3Z',workspace:'M4 3h16v18H4Zm4 5h8M8 12h8M8 16h5',estimate:'M5 3h14v18H5Zm3 4h8M8 11h1m5 0h1m-7 4h1m5 0h1',expenses:'M3 6h18v14H3Zm0 4h18m-6 5h3',contractors:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m13 10v-2a4 4 0 0 0-3-4m-1-12a4 4 0 0 1 0 8',saved:'M6 3h12v19l-6-4-6 4Z',account:'M20 21a8 8 0 0 0-16 0m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8'};
   function icon(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]||paths.workspace}"/></svg>`;}
-  const file=location.pathname.split('/').pop()||'index.html';
+  const file=(location.pathname.split('/').pop()||'index').replace(/\.html$/,'')+'.html';
   paths.photo='M3 6h5l2-3h4l2 3h5v15H3Zm9 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8';
   paths.search='M21 21l-5-5M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14';
   paths.foundation='m16 3 5 5-4 4-5-5Zm-2 6-9 9m-2-3 6 6m-6-6-1 7 7-1';
